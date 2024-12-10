@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "208447166878",
+    "project_id": "schooltimetrack",
+    "storage_bucket": "schooltimetrack.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:208447166878:android:60d31d60f619b7d533de8f",
+        "android_client_info": {
+          "package_name": "com.schooltimetrack.attendance"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBDu14U80CcXSpX9dKAxH6fQgdBwSmuJyw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
