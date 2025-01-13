@@ -1,2 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources></resources>
+<resources>
+    <declare-styleable name="RoundedLayout">
+        <attr name="cornerRadius" format="dimension" />
+        <attr name="roundedCorners">
+            <flag name="topLeft" value="0x1" />
+            <flag name="topRight" value="0x2" />
+            <flag name="bottomRight" value="0x4" />
+            <flag name="bottomLeft" value="0x8" />
+            <flag name="all" value="0xF" />
+        </attr>
+    </declare-styleable>
+    <declare-styleable name="SegmentedControl">
+        <attr name="indicatorPadding" format="dimension" />
+        <attr name="selectedIndex" format="integer"/>
+    </declare-styleable>
+    <declare-styleable name="ImageCropView">
+        <attr name="centerCropX" format="dimension" />
+        <attr name="centerCropY" format="dimension" />
+    </declare-styleable>
+    <declare-styleable name="FaceCameraView">
+        <attr name="overlayVisible" format="boolean" />
+        <attr name="detectionDelay" format="integer" />
+    </declare-styleable>
+
+
+    <declare-styleable name="WeeklyAttendanceView">
+        <attr name="android:padding" />
+    </declare-styleable>
+</resources>

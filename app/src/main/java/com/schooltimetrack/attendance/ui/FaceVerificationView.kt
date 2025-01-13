@@ -5,6 +5,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.ImageFormat
+import android.graphics.Matrix
 import android.graphics.Rect
 import android.graphics.RectF
 import android.graphics.YuvImage
@@ -52,18 +53,27 @@ class FaceVerificationView @JvmOverloads constructor(
 
     private val previewView: PreviewView
     private val overlayView: OverlayView
-    private val imageCapture: ImageCapture
+    private var imageCapture: ImageCapture? = null
     private var imageAnalyzer: ImageAnalysis? = null
-    val cameraExecutor: ExecutorService
-    private var onDetect: ((Bitmap, FaceVerificationView) -> Unit)? = null
-    private var onFaceConfirmed: ((Bitmap, FaceVerificationView) -> Unit)? = null
-    private var onFaceNotDetected: ((FaceVerificationView) -> Unit)? = null
+    var cameraExecutor: ExecutorService? = null
+    private var onDetect: (() -> Unit)? = null
+    private var onFaceConfirmed: ((List<Triple<String, List<String>, Float>>) -> Unit)? = null
+    private var onFaceNotDetected: (() -> Unit)? = null
     private var isDetectionPaused = false
     private var isOverlayVisible: Boolean = true
     private var detectionDelay: Int = 3500 // Default to 2 seconds
     private var detectionHandler: Handler = Handler(Looper.getMainLooper())
     private var detectionRunnable: Runnable? = null
-    private var faceBitmap: Bitmap? = null
+    private var faceTargets: List<Triple<String, List<String>, FloatArray>> = emptyList()
+
+    private val faceDetectorOptions = FaceDetectorOptions.Builder()
+        .enableTracking()
+        .setMinFaceSize(0.15f)
+        .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_ACCURATE)
+        .build()
+    private val faceDetector: FaceDetector = FaceDetection.getClient(faceDetectorOptions)
+    private val faceNet: FaceNet = FaceNet(context)
+    private val faceSpoofDetector: FaceSpoofDetector = FaceSpoofDetector(context)
 
     private var cameraProvider: ProcessCameraProvider? = null
     private var preview: Preview? = null
@@ -117,8 +127,7 @@ class FaceVerificationView @JvmOverloads constructor(
         overlayView = OverlayView(context)
         addView(overlayView, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT))
 
-        imageCapture = ImageCapture.Builder().build()
-        cameraExecutor = Executors.newSingleThreadExecutor()
+
     }
 
     var gradientRadius : Float = 0.6f
@@ -128,17 +137,82 @@ class FaceVerificationView @JvmOverloads constructor(
             invalidate()
         }
 
-    fun startCamera(bitmap: Bitmap? = null) {
-        faceBitmap = bitmap
+    fun initializeCamera(bitmap: Bitmap, userId: String, name: List<String>) {
+        cameraExecutor = Executors.newSingleThreadExecutor()
+        imageCapture = ImageCapture.Builder().build()
         imageAnalyzer = ImageAnalysis.Builder().build().also {
-            it.setAnalyzer(cameraExecutor, FaceAnalyzer())
+            it.setAnalyzer(cameraExecutor!!, FaceAnalyzer())
+        }
+        faceTargets = emptyList()
+
+        val image = InputImage.fromBitmap(bitmap, 0)
+        faceDetector.process(image)
+            .addOnSuccessListener { faces ->
+                if (faces.isNotEmpty()) {
+                    CoroutineScope(Dispatchers.Default).launch {
+                        val face = faces[0]
+                        val croppedFace = cropFace(bitmap, face)
+                        faceTargets = listOf(Triple(userId, name, faceNet.getFaceEmbedding(croppedFace)))
+                    }
+                }
+            }
+            .addOnFailureListener { e ->
+                Log.e("FaceAnalyzer", "Face detection failed", e)
+            }
+
+        startCamera()
+
+    }
+
+    fun initializeCamera(bitmap: FloatArray, userId: String, name: List<String>) {
+        cameraExecutor = Executors.newSingleThreadExecutor()
+        imageCapture = ImageCapture.Builder().build()
+        imageAnalyzer = ImageAnalysis.Builder().build().also {
+            it.setAnalyzer(cameraExecutor!!, FaceAnalyzer())
+        }
+        faceTargets = listOf(Triple(userId, name, bitmap))
+        startCamera()
+    }
+
+    fun initializeCamera(target: List<Triple<*, String, List<String>>>) {
+        cameraExecutor = Executors.newSingleThreadExecutor()
+        imageCapture = ImageCapture.Builder().build()
+        imageAnalyzer = ImageAnalysis.Builder().build().also {
+            it.setAnalyzer(cameraExecutor!!, FaceAnalyzer())
+
         }
 
+
+        faceTargets = target.map { (any, userId, name) ->
+            if (any is Bitmap) {
+                val image = InputImage.fromBitmap(any, 0)
+                faceDetector.process(image)
+                    .addOnSuccessListener { faces ->
+                        if (faces.isNotEmpty()) {
+                            CoroutineScope(Dispatchers.Default).launch {
+                                val face = faces[0]
+                                val croppedFace = cropFace(any, face)
+                                Triple(userId, name, faceNet.getFaceEmbedding(croppedFace))
+                            }
+                        }
+                    }
+                    .addOnFailureListener { e ->
+                        Log.e("FaceAnalyzer", "Face detection failed", e)
+                    }
+            } else if (any is FloatArray) {
+                Triple(userId, name, any)
+            }
+                Triple("", emptyList(), FloatArray(0))
+        }
+        startCamera()
+    }
+
+    private fun startCamera(){
         val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
         cameraProviderFuture.addListener({
             cameraProvider = cameraProviderFuture.get()
             preview = Preview.Builder().build().also {
-                it.setSurfaceProvider(previewView.surfaceProvider)
+                it.surfaceProvider = previewView.surfaceProvider
             }
 
             val cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
@@ -167,15 +241,15 @@ class FaceVerificationView @JvmOverloads constructor(
 
     fun isOverlayVisible(): Boolean = isOverlayVisible
 
-    fun setOnDetectListener(listener: (Bitmap, FaceVerificationView) -> Unit) {
+    fun setOnDetectListener(listener: () -> Unit) {
         onDetect = listener
     }
 
-    fun setOnFaceConfirmedListener(listener: (Bitmap, FaceVerificationView) -> Unit) {
+    fun setOnFaceConfirmedListener(listener: (List<Triple<String, List<String>, Float>>) -> Unit) {
         onFaceConfirmed = listener
     }
 
-    fun setOnFaceNotDetectedListener(listener: (FaceVerificationView) -> Unit) {
+    fun setOnFaceNotDetectedListener(listener: () -> Unit) {
         onFaceNotDetected = listener
     }
 
@@ -393,37 +467,36 @@ class FaceVerificationView @JvmOverloads constructor(
         }
     }
 
+
+    private fun cropFace(orig: Bitmap, face: Face): Bitmap {
+        val box = face.boundingBox
+
+        // Constrain all coordinates within bitmap bounds
+        val left = box.left.coerceIn(0, orig.width - 1)
+        val top = box.top.coerceIn(0, orig.height - 1)
+
+        // Calculate width and height ensuring they don't exceed bitmap dimensions
+        val width = box.width().coerceAtMost(orig.width - left)
+        val height = box.height().coerceAtMost(orig.height - top)
+
+        // Additional safety check to ensure valid dimensions
+        val safeWidth = if (left + width > orig.width) orig.width - left else width
+        val safeHeight = if (top + height > orig.height) orig.height - top else height
+
+        // Only create bitmap if we have valid dimensions
+        return if (safeWidth > 0 && safeHeight > 0) {
+            Bitmap.createBitmap(orig, left, top, safeWidth, safeHeight)
+        } else {
+            // Return original bitmap if we can't safely crop
+            orig
+        }
+    }
+
     private inner class FaceAnalyzer : ImageAnalysis.Analyzer {
         private var lastProcessingTimeMs = 0L
         private val PROCESS_DELAY = 50L // Limit processing to 20 FPS
-
-        private val faceDetectorOptions = FaceDetectorOptions.Builder()
-            .enableTracking()
-            .setMinFaceSize(0.15f)
-            .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_ACCURATE)
-            .build()
-        private val faceDetector: FaceDetector = FaceDetection.getClient(faceDetectorOptions)
-        private val faceNet: FaceNet = FaceNet(context)
-        private val faceSpoofDetector: FaceSpoofDetector = FaceSpoofDetector(context)
-
-        private var faceFloatArray: FloatArray? = null
-
-        init {
-            val image = InputImage.fromBitmap(faceBitmap!!, 0)
-            faceDetector.process(image)
-                .addOnSuccessListener { faces ->
-                    if (faces.isNotEmpty()) {
-                        CoroutineScope(Dispatchers.Default).launch {
-                            val face = faces[0]
-                            val croppedFace = cropFace(faceBitmap!!, face)
-                            faceFloatArray = faceNet.getFaceEmbedding(croppedFace)
-                        }
-                    }
-                }
-                .addOnFailureListener { e ->
-                    Log.e("FaceAnalyzer", "Face detection failed", e)
-                }
-        }
+        private var lastDetectionState = false // Track the previous detection state
+        private var lastMatchedUserId: String? = null // Track the last matched user ID
 
         @OptIn(ExperimentalGetImage::class)
         override fun analyze(imageProxy: ImageProxy) {
@@ -433,6 +506,7 @@ class FaceVerificationView @JvmOverloads constructor(
                 return
             }
             lastProcessingTimeMs = currentTime
+//            Toast.makeText(context, "Face not detected", Toast.LENGTH_SHORT).show()
 
             if (isDetectionPaused) {
                 imageProxy.close()
@@ -446,96 +520,110 @@ class FaceVerificationView @JvmOverloads constructor(
 
             val image = InputImage.fromMediaImage(mediaImage, imageProxy.imageInfo.rotationDegrees)
 
-
-            Log.d("FaceAnalyzer", "Processing image")
-
             faceDetector.process(image)
                 .addOnSuccessListener { faces ->
                     if (faces.isNotEmpty()) {
-                        Log.d("FaceAnalyzer", "Face detected")
                         val face = faces[0]
-
                         updateCameraView(
                             face,
                             imageProxy.width.toFloat(),
                             imageProxy.height.toFloat()
                         )
-//
-//                        val croppedFace = cropFace(imageProxy.toBitmap(), face)
-//
-//                        CoroutineScope(Dispatchers.Default).launch {
-//                            val spoofResult = faceSpoofDetector.detectSpoof(imageProxy.toBitmap(), face.boundingBox)
-//                            val embedding = faceNet.getFaceEmbedding(croppedFace)
-//
-//                            val similarity = faceFloatArray?.let { faceFloatArray ->
-//                                cosineSimilarity(faceFloatArray, embedding)
-//                            } ?: 0f
-//
-//                            withContext(Dispatchers.Main) {
-//                                if (similarity > 0.6 && !spoofResult.isSpoof) {
-//                                    run {
-//                                        Log.d("FaceAnalyzer", "Face matched, similarity: $similarity spoof: ${spoofResult.isSpoof}")
-//                                        onDetect?.invoke(
-//                                            previewView.bitmap ?: return@run,
-//                                            this@FaceVerificationView
-//                                        )
-//
-//                                        if (detectionRunnable == null) {
-//                                            Log.d("FaceAnalyzer", "Face confirmed")
-//                                            detectionRunnable = Runnable {
-//                                                onFaceConfirmed?.invoke(
-//                                                    previewView.bitmap ?: return@Runnable,
-//                                                    this@FaceVerificationView
-//                                                )
-//                                                detectionRunnable = null
-//                                            }
-//                                            detectionHandler.postDelayed(
-//                                                detectionRunnable!!,
-//                                                detectionDelay.toLong()
-//                                            )
-//                                        }
-//                                    }
-//                                    imageProxy.close()
-//                                } else {
-//                                    Log.d("FaceAnalyzer", "Face not matched, similarity: $similarity spoof: ${spoofResult.isSpoof}")
-//                                    resetCameraView()
-//                                    onFaceNotDetected?.invoke(
-//                                        this@FaceVerificationView
-//                                    )
-//                                    detectionRunnable?.let {
-//                                        detectionHandler.removeCallbacks(it)
-//                                    }
-//                                    detectionRunnable = null
-//                                }
-//                            }
-//                        }
 
-                    } else {
-                        Log.d("FaceAnalyzer", "Face not detected")
-                        resetCameraView()
-                        onFaceNotDetected?.invoke(
-                            this@FaceVerificationView
+                        val imageProxyBitmap = imageProxy.toBitmap()
+                        val matrix = Matrix()
+                        matrix.postRotate(imageProxy.imageInfo.rotationDegrees.toFloat())
+                        val rotatedBitmap = Bitmap.createBitmap(
+                            imageProxyBitmap,
+                            0,
+                            0,
+                            imageProxyBitmap.width,
+                            imageProxyBitmap.height,
+                            matrix,
+                            true
                         )
-                        detectionRunnable?.let {
-                            detectionHandler.removeCallbacks(it)
-                        }
-                        detectionRunnable = null
-                    }
 
+                        val croppedFace = cropFace(rotatedBitmap, face)
+
+                        CoroutineScope(Dispatchers.Default).launch {
+                            val currentEmbedding = faceNet.getFaceEmbedding(croppedFace)
+
+                            // Calculate similarities for all face targets
+                            val similarities = faceTargets.map { target ->
+
+                                Triple(
+                                    target.first, // userId
+                                    target.second, // name
+                                    if (faceSpoofDetector.detectSpoof(imageProxy.toBitmap(), face.boundingBox).isSpoof) 0f
+                                    else cosineSimilarity(target.third, currentEmbedding) // similarity score
+                                )
+                            }.sortedByDescending { it.third } // Sort by similarity score
+
+                            // Find the best match
+                            val bestMatch = similarities.firstOrNull()
+                            val isMatchingFace = bestMatch?.third?.let { it > 0.6 } ?: false
+
+                            Log.d("FaceAnalyzer", "Best match: $bestMatch")
+
+                            withContext(Dispatchers.Main) {
+                                // Check if the best matching face has changed
+                                val currentBestUserId = bestMatch?.first
+                                if (currentBestUserId != lastMatchedUserId) {
+                                    // Reset detection if the best matching face has changed
+                                    detectionRunnable?.let {
+                                        detectionHandler.removeCallbacks(it)
+                                    }
+                                    detectionRunnable = null
+                                    lastMatchedUserId = currentBestUserId
+                                }
+
+                                if (isMatchingFace != lastDetectionState) {
+                                    lastDetectionState = isMatchingFace
+
+                                    if (isMatchingFace) {
+                                        onDetect?.invoke()
+
+                                        if (detectionRunnable == null) {
+                                            detectionRunnable = Runnable {
+                                                onFaceConfirmed?.invoke(similarities)
+                                                detectionRunnable = null
+                                            }
+                                            detectionHandler.postDelayed(
+                                                detectionRunnable!!,
+                                                detectionDelay.toLong()
+                                            )
+                                        }
+                                    } else {
+                                        resetCameraView()
+                                        onFaceNotDetected?.invoke()
+                                        detectionRunnable?.let {
+                                            detectionHandler.removeCallbacks(it)
+                                        }
+                                        detectionRunnable = null
+                                        lastMatchedUserId = null
+                                    }
+                                }
+                                imageProxy.close()
+                            }
+                        }
+                    } else {
+                        resetCameraView()
+                        if (lastDetectionState) {
+                            lastDetectionState = false
+                            onFaceNotDetected?.invoke()
+                            detectionRunnable?.let {
+                                detectionHandler.removeCallbacks(it)
+                            }
+                            detectionRunnable = null
+                            lastMatchedUserId = null
+                        }
+                        imageProxy.close()
+                    }
                 }
                 .addOnFailureListener { e ->
                     Log.e("FaceAnalyzer", "Face detection failed", e)
                     imageProxy.close()
                 }
-        }
-
-        private fun cropFace(orig: Bitmap, face: Face): Bitmap {
-            val box = face.boundingBox
-            val left = box.left.coerceAtLeast(0)
-            val top = box.top.coerceAtLeast(0)
-            val width = box.width().coerceAtMost(orig.width - left)
-            val height = box.height().coerceAtMost(orig.height - top)
-            return Bitmap.createBitmap(orig, left, top, width, height)
         }
 
         private fun cosineSimilarity(v1: FloatArray, v2: FloatArray): Float {
@@ -549,7 +637,6 @@ class FaceVerificationView @JvmOverloads constructor(
             }
             return dot / (kotlin.math.sqrt(mag1) * kotlin.math.sqrt(mag2))
         }
-
     }
 
     override fun onDetachedFromWindow() {
@@ -557,7 +644,7 @@ class FaceVerificationView @JvmOverloads constructor(
         animatorX?.cancel()
         animatorY?.cancel()
         scaleAnimator?.cancel()
-        cameraExecutor.shutdown()
+        cameraExecutor?.shutdown() ?: return
         lastPreviewBitmap?.recycle()
         lastPreviewBitmap = null
     }
@@ -569,3 +656,5 @@ class FaceVerificationView @JvmOverloads constructor(
     }
 
 }
+
+

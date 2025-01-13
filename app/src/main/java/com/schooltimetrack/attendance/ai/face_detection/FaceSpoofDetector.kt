@@ -8,7 +8,6 @@ import androidx.core.graphics.get
 import androidx.core.graphics.set
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-//import org.koin.core.annotation.Single
 import org.tensorflow.lite.DataType
 import org.tensorflow.lite.Interpreter
 import org.tensorflow.lite.gpu.CompatibilityList
@@ -21,19 +20,7 @@ import kotlin.math.exp
 import kotlin.time.DurationUnit
 import kotlin.time.measureTime
 
-/*
 
-Utility class for interacting with FaceSpoofDetector
-
-- It uses the MiniFASNet model from https://github.com/minivision-ai/Silent-Face-Anti-Spoofing
-- The preprocessing methods are derived from
-https://github.com/serengil/deepface/blob/master/deepface/models/spoofing/FasNet.py
-- The model weights are in the PyTorch format. To convert them to the TFLite format,
-  check the notebook linked in the README of the project
-- An instance of this class is injected in ImageVectorUseCase.kt
-
-*/
-//@Single
 class FaceSpoofDetector(context: Context, useGpu: Boolean = false, useXNNPack: Boolean = false, useNNAPI: Boolean = false) {
 
     data class FaceSpoofResult(val isSpoof: Boolean, val score: Float, val timeMillis: Long)
@@ -67,9 +54,9 @@ class FaceSpoofDetector(context: Context, useGpu: Boolean = false, useXNNPack: B
                 this.useNNAPI = useNNAPI
             }
         firstModelInterpreter =
-            Interpreter(FileUtil.loadMappedFile(context, "spoof_model_scale_2_7.tflite"), interpreterOptions)
+            Interpreter(FileUtil.loadMappedFile(context, "model/spoof_model_scale_2_7.tflite"), interpreterOptions)
         secondModelInterpreter =
-            Interpreter(FileUtil.loadMappedFile(context, "spoof_model_scale_4_0.tflite"), interpreterOptions)
+            Interpreter(FileUtil.loadMappedFile(context, "model/spoof_model_scale_4_0.tflite"), interpreterOptions)
     }
 
     suspend fun detectSpoof(frameImage: Bitmap, faceRect: Rect): FaceSpoofResult =

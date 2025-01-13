@@ -8,7 +8,6 @@ import kotlin.math.pow
 import kotlin.math.sqrt
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-//import org.koin.core.annotation.Single
 import org.tensorflow.lite.DataType
 import org.tensorflow.lite.Interpreter
 import org.tensorflow.lite.gpu.CompatibilityList
@@ -21,10 +20,6 @@ import org.tensorflow.lite.support.image.ops.ResizeOp
 import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
 import org.tensorflow.lite.support.tensorbuffer.TensorBufferFloat
 
-// Derived from the original project:
-// https://github.com/shubham0204/FaceRecognition_With_FaceNet_Android/blob/master/app/src/main/java/com/ml/quaterion/facenetdetection/model/FaceNetModel.kt
-// Utility class for FaceNet model
-//@Single
 class FaceNet(context: Context, useGpu: Boolean = true, useXNNPack: Boolean = true) {
 
     // Input image size for FaceNet model.
@@ -51,14 +46,14 @@ class FaceNet(context: Context, useGpu: Boolean = true, useXNNPack: Boolean = tr
                         addDelegate(GpuDelegate())
                     }
                 } else {
-                    // Number of threads for computation
                     numThreads = 4
                 }
                 useXNNPACK = useXNNPack
-                useNNAPI = true
+//                useNNAPI = true
+                useNNAPI = false
             }
         interpreter =
-            Interpreter(FileUtil.loadMappedFile(context, "facenet.tflite"), interpreterOptions)
+            Interpreter(FileUtil.loadMappedFile(context, "model/facenet_512.tflite"), interpreterOptions)
     }
 
     // Gets an face embedding using FaceNet
@@ -82,7 +77,6 @@ class FaceNet(context: Context, useGpu: Boolean = true, useXNNPack: Boolean = tr
     // Op to perform standardization
     // x' = ( x - mean ) / std_dev
     class StandardizeOp : TensorOperator {
-
         override fun apply(p0: TensorBuffer?): TensorBuffer {
             val pixels = p0!!.floatArray
             val mean = pixels.average().toFloat()

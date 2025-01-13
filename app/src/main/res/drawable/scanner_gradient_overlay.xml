@@ -1,4 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
-<selector xmlns:android="http://schemas.android.com/apk/res/android">
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Base radial gradient -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:type="radial"
+                android:gradientRadius="100%p"
+                android:centerX="0.5"
+                android:centerY="0.5"
+                android:startColor="#000000"
+                android:endColor="#FFFFFF" />
+        </shape>
+    </item>
 
-</selector>
+    <item
+        android:top="75dp"
+        android:bottom="75dp"
+        android:left="75dp"
+        android:right="75dp">
+        <shape android:shape="rectangle">
+            <corners android:radius="10dp" />
+            <solid android:color="#000000" />
+        </shape>
+    </item>
+
+</layer-list>

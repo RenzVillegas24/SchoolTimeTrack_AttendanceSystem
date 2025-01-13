@@ -1,8 +1,10 @@
-<com.schooltimetrack.attendance.ui.RoundedLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<?xml version="1.0" encoding="utf-8"?>
+<com.schooltimetrack.attendance.ui.RoundedLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    app:cornerRadius="?attr/dialogCornerRadius"
+    app:cornerRadius="40dp"
     app:roundedCorners="topLeft|topRight"
     android:background="?attr/colorSurface"
     android:clipChildren="true">
@@ -16,7 +18,7 @@
         android:id="@+id/personSelectionView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="100dp"
+        android:layout_marginBottom="60dp"
         android:layout_gravity="bottom" />
 
     <TextView

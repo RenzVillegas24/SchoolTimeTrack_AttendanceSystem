@@ -1,42 +1,34 @@
 package com.schooltimetrack.attendance.address
 
-import androidx.room.ColumnInfo
-import androidx.room.Entity
-import androidx.room.PrimaryKey
-
-@Entity(tableName = "refbrgy")
-data class Barangay(
-    @PrimaryKey(autoGenerate = true) val id: Int = 0,
-    @ColumnInfo(name = "brgyCode") val barangayCode: String?,
-    @ColumnInfo(name = "brgyDesc") val description: String?,
-    @ColumnInfo(name = "regCode") val regionCode: String?,
-    @ColumnInfo(name = "provCode") val provinceCode: String?,
-    @ColumnInfo(name = "citymunCode") val cityMunicipalityCode: String?
-)
-
-@Entity(tableName = "refcitymun")
-data class CityMunicipality(
-    @PrimaryKey(autoGenerate = true) val id: Int = 0,
-    val psgcCode: String?,
-    @ColumnInfo(name = "citymunDesc") val description: String?,
-    @ColumnInfo(name = "regDesc") val regionDescription: String?,
-    @ColumnInfo(name = "provCode") val provinceCode: String?,
-    @ColumnInfo(name = "citymunCode") val cityMunicipalityCode: String?
-)
-
-@Entity(tableName = "refprovince")
-data class Province(
-    @PrimaryKey(autoGenerate = true) val id: Int = 0,
-    val psgcCode: String?,
-    @ColumnInfo(name = "provDesc") val description: String?,
-    @ColumnInfo(name = "regCode") val regionCode: String?,
-    @ColumnInfo(name = "provCode") val provinceCode: String?
-)
-
-@Entity(tableName = "refregion")
 data class Region(
-    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    val id: Int,
     val psgcCode: String?,
-    @ColumnInfo(name = "regDesc") val description: String?,
-    @ColumnInfo(name = "regCode") val regionCode: String?
+    val regDesc: String?,
+    val regCode: String?
+)
+
+data class Province(
+    val id: Int,
+    val psgcCode: String?,
+    val provDesc: String?,
+    val regCode: String?,
+    val provCode: String?
+)
+
+data class CityMun(
+    val id: Int,
+    val psgcCode: String?,
+    val citymunDesc: String?,
+    val regDesc: String?,
+    val provCode: String?,
+    val citymunCode: String?
+)
+
+data class Barangay(
+    val id: Int,
+    val brgyCode: String?,
+    val brgyDesc: String?,
+    val regCode: String?,
+    val provCode: String?,
+    val citymunCode: String?
 )

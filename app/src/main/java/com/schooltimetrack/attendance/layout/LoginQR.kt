@@ -5,11 +5,16 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.Space
 import android.widget.Toast
 import androidx.camera.view.PreviewView
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
+import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.transition.MaterialSharedAxis
 import com.schooltimetrack.attendance.R
 import com.schooltimetrack.attendance.qr.EncryptedGenerator
 import com.schooltimetrack.attendance.qr.EncryptedScanner
@@ -34,10 +39,24 @@ class LoginQR : Fragment() {
         val btnSignUp = view.findViewById<Button>(R.id.btnSignUp)
         val qrGenerator = EncryptedGenerator()
 
+        val ablToolbar = view.findViewById<AppBarLayout>(R.id.ablToolbar)
+        val sBottom = view.findViewById<Space>(R.id.sBottom)
+
+        ViewCompat.setOnApplyWindowInsetsListener(view) { v, insets ->
+            val statusBar = insets.getInsets(WindowInsetsCompat.Type.statusBars())
+            val navBar = insets.getInsets(WindowInsetsCompat.Type.navigationBars())
+            ablToolbar.setPadding(0, statusBar.top, 0, 0)
+            sBottom.layoutParams.height = navBar.bottom
+            insets
+        }
+
+        exitTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ true)
+        enterTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ true)
+        reenterTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ false)
+        returnTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ false)
+
         previewView = view.findViewById(R.id.viewFinder)
-
-
-        val encryptedScanner = EncryptedScanner(
+        encryptedScanner = EncryptedScanner(
             context = view.context,
             lifecycleOwner = viewLifecycleOwner,
             previewView = previewView,
@@ -45,16 +64,17 @@ class LoginQR : Fragment() {
             onDecryptedDataReceived = { jsonData, encryptedScanner ->
                 // Handle the decrypted JSON data
                 val userType = jsonData.getString("userType")
-                val email = jsonData.getString("email")
-                val password = jsonData.getString("password")
-                val firstName = jsonData.getString("firstName")
-                val lastName = jsonData.getString("lastName")
-                val middleName = jsonData.getString("middleName")
-                val suffixName = jsonData.getString("suffixName")
-                val address = jsonData.getString("databases")
+                val name = jsonData.getJSONArray("name")
                 val section = jsonData.getString("section")
                 val age = jsonData.getString("age")
-
+                val address = jsonData.getJSONArray("address")
+                val addressId = jsonData.getString("addressId")
+                val email = jsonData.getString("email")
+                val birthday = jsonData.getString("birthday")
+                val gender = jsonData.getString("gender")
+                val contactNumber = jsonData.getString("contactNumber")
+                val password = jsonData.getString("password")
+                val embedding = jsonData.getJSONArray("embedding")
 
                 encryptedScanner.pauseScanning()
 
@@ -63,15 +83,11 @@ class LoginQR : Fragment() {
                     .setTitle("User Data")
                     .setMessage(
                         "User Type: $userType\n" +
-                                "Email: $email\n" +
-                                "Password: $password\n" +
-                                "First Name: $firstName\n" +
-                                "Middle Name: $middleName\n" +
-                                "Last Name: $lastName\n" +
-                                "Suffix Name: $suffixName\n" +
-                                "Address: $address\n" +
-                                "Section: $section\n" +
-                                "Age: $age"
+                        "Email: $email\n" +
+                        "Password: $password\n" +
+                        "Address: $address\n" +
+                        "Section: $section\n" +
+                        "Age: $age"
                     )
                     .setPositiveButton("OK") { dialog, _ ->
                         dialog.dismiss()

@@ -1,163 +1,167 @@
 package com.schooltimetrack.attendance.ui
 
-import android.animation.Keyframe
-import android.animation.ObjectAnimator
-import android.animation.PropertyValuesHolder
 import android.app.Dialog
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Canvas
 import android.graphics.Color
-import android.net.Uri
 import android.os.Bundle
-import android.provider.MediaStore
-import android.util.Base64
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.ImageView
-import android.widget.ProgressBar
-import android.widget.Toast
-import androidx.lifecycle.lifecycleScope
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.android.material.button.MaterialButton
-import com.google.android.material.card.MaterialCardView
 import com.google.android.material.color.MaterialColors
-import com.google.android.material.textview.MaterialTextView
-import com.ml.shubham0204.facenet_android.domain.embeddings.FaceNet
-import com.ml.shubham0204.facenet_android.domain.face_detection.FaceSpoofDetector
 import com.schooltimetrack.attendance.R
-import com.schooltimetrack.attendance.ai.FaceRecognition
-import kotlinx.coroutines.launch
-import okhttp3.*
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import org.json.JSONObject
-import java.io.ByteArrayOutputStream
-import java.io.IOException
+import com.schooltimetrack.attendance.model.StudentInfo
+import com.schooltimetrack.attendance.model.TeacherInfo
+import com.schooltimetrack.attendance.qr.EncryptedGenerator
+import java.io.Serializable
 
-class FaceVerificationBottomSheet(
-    private val profileImage: Any,
-    private val onVerificationSuccess: (FaceVerificationBottomSheet, List<Triple<String, List<String>, Float>>) -> Unit,
+class GeneratedQRBottomSheet(
+    private val json: Map<String, Serializable?>
 ) : BottomSheetDialogFragment() {
 
-    private lateinit var faceVerificationView: FaceVerificationView
-    private lateinit var profileImageView: ImageView
-    private lateinit var profileCardView: MaterialCardView
-    private lateinit var btnCancel: MaterialButton
-    private lateinit var btnPause: MaterialButton
-    private lateinit var btnResume: MaterialButton
-
-
-    private lateinit var fade: ObjectAnimator
-
-    // create an gradient radius animation from face verification view
-    private lateinit var gradientRadiusAnimator: ObjectAnimator
+    private lateinit var qrGenerator: EncryptedGenerator
+    private lateinit var qrImage: ImageView
+    private lateinit var btnExit: MaterialButton
+    private lateinit var btnExport: MaterialButton
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        val view = inflater.inflate(R.layout.bottom_sheet_face_verification, container, false)
-        faceVerificationView = view.findViewById(R.id.faceVerificationView)
-        profileImageView = view.findViewById(R.id.profileImageView)
-        profileCardView = view.findViewById(R.id.profileCardView)
-        btnCancel = view.findViewById(R.id.btnCancel)
-        btnPause = view.findViewById(R.id.btnPause)
-        btnResume = view.findViewById(R.id.btnResume)
+        val view = inflater.inflate(R.layout.bottom_sheet_generated_qr, container, false)
+        btnExit = view.findViewById(R.id.btnExit)
+        btnExport = view.findViewById(R.id.btnExport)
+        qrImage = view.findViewById(R.id.ivImageQR)
 
-        val fadeKeyframe1 = Keyframe.ofFloat(0f, 0f)
-        val fadeKeyframe2 = Keyframe.ofFloat(0.5f, 1f)
-        val fadeKeyframe3 = Keyframe.ofFloat(1f, 0f)
-        val fadeProperty = PropertyValuesHolder.ofKeyframe("alpha", fadeKeyframe1, fadeKeyframe2, fadeKeyframe3)
-        fade = ObjectAnimator.ofPropertyValuesHolder(profileCardView, fadeProperty).apply {
-            duration = 2000
-            repeatCount = ObjectAnimator.INFINITE
+        qrGenerator = EncryptedGenerator()
+
+        var qrData = if (json["userType"] as String == "student") {
+            qrGenerator.generateForStudent(
+                StudentInfo(
+                    email = json["email"] as String,
+                    password = json["password"] as String,
+                    name = json["name"] as Array<String>,
+                    age = json["age"] as Int,
+                    address = json["address"] as Array<String>,
+                    addressId = json["addressId"] as String,
+                    section = json["section"] as String,
+                    grade = json["grade"] as String,
+                    contactNumber = json["contactNumber"] as Array<String>,
+                    embedding = json["embedding"] as FloatArray
+                ),
+                Color.TRANSPARENT,
+                MaterialColors.getColor(context, com.google.android.material.R.attr.colorPrimary, "colorPrimary")
+            )
+        } else {
+            qrGenerator.generateForTeacher(
+                TeacherInfo(
+                    email = json["email"] as String,
+                    password = json["password"] as String,
+                    name = json["name"] as Array<String>,
+                    age = json["age"] as Int,
+                    address = json["address"] as Array<String>,
+                    addressId = json["addressId"] as String,
+                    section = json["section"] as String,
+                    subject = json["subject"] as String,
+                    contactNumber = json["contactNumber"] as Array<String>,
+                    embedding = json["embedding"] as FloatArray
+                ),
+                Color.TRANSPARENT,
+                MaterialColors.getColor(context, com.google.android.material.R.attr.colorPrimary, "colorPrimary")
+            )
         }
 
-        gradientRadiusAnimator = ObjectAnimator.ofFloat(faceVerificationView, "gradientRadius", 0.2f)
+        // show QR code on dialog
+        val qrBitmap = BitmapFactory.decodeByteArray(qrData, 0, qrData.size)
 
-        // get the type of profile image
-        Log.d("FaceVerificationBottomSheet", "Profile image type: ${profileImage::class.simpleName}")
-        Log.d("FaceVerificationBottomSheet", "Profile: $profileImage")
+        qrImage.setImageBitmap(qrBitmap)
 
-        if (profileImage is Bitmap) {
-            faceVerificationView.initializeCamera(profileImage, "", emptyList())
-        } else if (profileImage is Triple<*, *, *>) {
-            if (profileImage.first is Bitmap)
-                faceVerificationView.initializeCamera(
-                    profileImage.first as Bitmap,
-                    profileImage.second as String,
-                    profileImage.third as List<String>)
-            else if (profileImage.first is FloatArray)
-                faceVerificationView.initializeCamera(
-                    profileImage.first as FloatArray,
-                    profileImage.second as String,
-                    profileImage.third as List<String>)
-        } else if (profileImage is List<*>) {
-            if (profileImage.isNotEmpty()) {
-                val profile = profileImage[0]
-                if (profile is Bitmap) {
-                    faceVerificationView.initializeCamera(profile, "", emptyList())
-                } else if (profile is Triple<*, *, *>) {
-                    if (profile.second is String && profile.third is List<*>) {
-                        if (profile.first is Bitmap)
-                            faceVerificationView.initializeCamera(
-                                profile.first as Bitmap,
-                                profile.second as String,
-                                profile.third as List<String>
-                            )
-                        else if (profile.first is FloatArray)
-                            faceVerificationView.initializeCamera(
-                                profile.first as FloatArray,
-                                profile.second as String,
-                                profile.third as List<String>
-                            )
-                    }
-                }
-            }
-        }
-
-        faceVerificationView.setOnFaceConfirmedListener { results ->
-            faceVerificationView.freezeCameraPreview()
-            onVerificationSuccess(this@FaceVerificationBottomSheet, results)
-        }
-
-        faceVerificationView.setOnDetectListener {
-            gradientRadiusAnimator.apply {
-                setFloatValues(faceVerificationView.gradientRadius, 0.2f)
-                duration = 3500
-                cancel()
-                start()
-            }
-        }
-
-
-        faceVerificationView.setOnFaceNotDetectedListener {
-            // revert the gradient radius animation
-            gradientRadiusAnimator.apply {
-                setFloatValues(0.6f, faceVerificationView.gradientRadius)
-                duration = 750
-                cancel()
-                reverse()
-            }
-        }
-
-        btnCancel.setOnClickListener {
+        btnExit.setOnClickListener {
             dismiss()
         }
 
-        btnPause.setOnClickListener {
-            faceVerificationView.pauseDetection()
-        }
+        btnExport.setOnClickListener {
+            qrData = if (json["userType"] as String == "student") {
+                qrGenerator.generateForStudent(
+                    StudentInfo(
+                        email = json["email"] as String,
+                        password = json["password"] as String,
+                        name = json["name"] as Array<String>,
+                        age = json["age"] as Int,
+                        address = json["address"] as Array<String>,
+                        addressId = json["addressId"] as String,
+                        section = json["section"] as String,
+                        grade = json["grade"] as String,
+                        contactNumber = json["contactNumber"] as Array<String>,
+                        embedding = json["embedding"] as FloatArray
+                    ),
+                    Color.TRANSPARENT,
+                    Color.BLACK
+                )
+            } else {
+                qrGenerator.generateForTeacher(
+                    TeacherInfo(
+                        email = json["email"] as String,
+                        password = json["password"] as String,
+                        name = json["name"] as Array<String>,
+                        age = json["age"] as Int,
+                        address = json["address"] as Array<String>,
+                        addressId = json["addressId"] as String,
+                        section = json["section"] as String,
+                        subject = json["subject"] as String,
+                        contactNumber = json["contactNumber"] as Array<String>,
+                        embedding = json["embedding"] as FloatArray
+                    ),
+                    Color.TRANSPARENT,
+                    Color.BLACK
+                )
+            }
 
-        btnResume.setOnClickListener {
-            faceVerificationView.resumeDetection()
-        }
+            val qrBitmap = BitmapFactory.decodeByteArray(qrData, 0, qrData.size)
 
-        Log.d("FaceVerificationBottomSheet", "View created and camera should start")
+            // add text to QR code
+            val bitmap = Bitmap.createBitmap(qrBitmap.width, qrBitmap.height + 200, Bitmap.Config.ARGB_8888).apply {
+                val canvas = Canvas(this)
+                canvas.drawColor(Color.WHITE)
+                val paint = android.graphics.Paint().apply {
+                    color = Color.BLACK
+                    textSize = 40f
+                    textAlign = android.graphics.Paint.Align.CENTER
+                }
+                val xPos = canvas.width / 2
+                val yPos = 90
+                canvas.drawText("Scan the QR to be able to login to the",
+                    xPos.toFloat(), yPos.toFloat(), paint.apply {
+                        textSize = 23f
+                    })
+                canvas.drawText("School Time Track app",
+                xPos.toFloat(), yPos + 42f, paint.apply {
+                    textSize = 39f
+                    isFakeBoldText = true
+                })
+                canvas.drawBitmap(qrBitmap, 0f, 170f, null)
+            }
+
+            // save the bitmap to gallery
+            val saved = android.provider.MediaStore.Images.Media.insertImage(
+                context?.contentResolver,
+                bitmap,
+                "QR Code",
+                "QR Code for School Time Track"
+            )
+            if (saved != null) {
+                android.widget.Toast.makeText(context, "QR code saved to gallery", android.widget.Toast.LENGTH_SHORT).show()
+            } else {
+                android.widget.Toast.makeText(context, "Failed to save QR code", android.widget.Toast.LENGTH_SHORT).show()
+            }
+        }
 
         return view
     }
@@ -173,8 +177,19 @@ class FaceVerificationBottomSheet(
                 val behavior = BottomSheetBehavior.from(it)
                 behavior.state = BottomSheetBehavior.STATE_EXPANDED
                 behavior.peekHeight = 0
-                it.layoutParams.height = ViewGroup.LayoutParams.MATCH_PARENT
-                behavior.isDraggable = false
+
+                // set the height as maximum height minus the height of the status bar
+                val displayMetrics = resources.displayMetrics
+                val height = displayMetrics.heightPixels
+                // get the status bar height
+                val resourceId = resources.getIdentifier("status_bar_height", "dimen", "android")
+                val statusBarHeight = if (resourceId > 0) resources.getDimensionPixelSize(resourceId) else 0
+                val params = it.layoutParams
+                params.height = height - statusBarHeight
+                it.layoutParams = params
+
+                it.background = null
+
             }
         }
         // Keep the status bar color unchanged
@@ -188,7 +203,6 @@ class FaceVerificationBottomSheet(
 
     override fun onDestroy() {
         super.onDestroy()
-        faceVerificationView.cameraExecutor?.shutdown()
     }
 
 }

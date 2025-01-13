@@ -1,4 +1,3 @@
 package com.schooltimetrack.attendance.ui
 
-class SkeletonFace {
-}
+data class SkeletonFace(val id: Int)

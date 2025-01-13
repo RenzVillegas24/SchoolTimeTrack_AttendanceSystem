@@ -6,5 +6,17 @@
         <item name="android:windowTranslucentStatus">true</item>
     </style>
 
+
+    <style name="Theme.App.SplashScreen" parent="Theme.SplashScreen">
+        <!-- Set the splash screen background, animated icon, and animation duration. -->
+        <item name="windowSplashScreenBackground">@android:color/transparent</item>
+
+        <item name="windowSplashScreenAnimationDuration">50</item>
+
+        <!-- Set the theme of the Activity that directly follows your splash screen. -->
+        <!-- Required -->
+        <item name="postSplashScreenTheme">@style/Theme.SchoolTimeTrackAttendanceSystem</item>
+    </style>
+
     <style name="Theme.SchoolTimeTrackAttendanceSystem" parent="Base.Theme.SchoolTimeTrackAttendanceSystem" />
 </resources>

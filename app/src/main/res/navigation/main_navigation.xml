@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main_navigation"
-    app:startDestination="@id/login">
+    app:startDestination="@id/welcome">
     <fragment
         android:id="@+id/login"
         android:name="com.schooltimetrack.attendance.layout.Login"
@@ -12,6 +12,15 @@
         <action
             android:id="@+id/action_login_to_signUp"
             app:destination="@id/signUp" />
+        <action
+            android:id="@+id/action_login_to_loginQR"
+            app:destination="@id/loginQR" />
+        <action
+            android:id="@+id/action_login_to_studentMenu"
+            app:destination="@id/studentMenu" />
+        <action
+            android:id="@+id/action_login_to_teacherMenu"
+            app:destination="@id/teacherMenu" />
     </fragment>
     <fragment
         android:id="@+id/signUp"
@@ -21,5 +30,73 @@
         <action
             android:id="@+id/action_signUp_to_login"
             app:destination="@id/login" />
+        <action
+            android:id="@+id/action_signUp_to_loginQR"
+            app:destination="@id/loginQR" />
+        <action
+            android:id="@+id/action_signUp_to_studentMenu"
+            app:destination="@id/studentMenu" />
+        <action
+            android:id="@+id/action_signUp_to_teacherMenu"
+            app:destination="@id/teacherMenu" />
     </fragment>
+    <fragment
+        android:id="@+id/welcome"
+        android:name="com.schooltimetrack.attendance.layout.Welcome"
+        android:label="fragment_welcome"
+        tools:layout="@layout/fragment_welcome" >
+        <action
+            android:id="@+id/action_welcome_to_login"
+            app:destination="@id/login" />
+        <action
+            android:id="@+id/action_welcome_to_signUp"
+            app:destination="@id/signUp" />
+        <action
+            android:id="@+id/action_welcome_to_loginQR"
+            app:destination="@id/loginQR" />
+    </fragment>
+    <fragment
+        android:id="@+id/loginQR"
+        android:name="com.schooltimetrack.attendance.layout.LoginQR"
+        android:label="fragment_login_qr"
+        tools:layout="@layout/fragment_login_qr" >
+        <action
+            android:id="@+id/action_loginQR_to_welcome"
+            app:destination="@id/welcome" />
+        <action
+            android:id="@+id/action_loginQR_to_login"
+            app:destination="@id/login" />
+        <action
+            android:id="@+id/action_loginQR_to_signUp"
+            app:destination="@id/signUp" />
+        <action
+            android:id="@+id/action_loginQR_to_studentMenu"
+            app:destination="@id/studentMenu" />
+        <action
+            android:id="@+id/action_loginQR_to_teacherMenu"
+            app:destination="@id/teacherMenu" />
+    </fragment>
+    <fragment
+        android:id="@+id/studentMenu"
+        android:name="com.schooltimetrack.attendance.layout.StudentMenu"
+        android:label="fragment_student_menu"
+        tools:layout="@layout/fragment_student_menu" >
+        <action
+            android:id="@+id/action_studentMenu_to_userInfo"
+            app:destination="@id/userInfo" />
+    </fragment>
+    <fragment
+        android:id="@+id/teacherMenu"
+        android:name="com.schooltimetrack.attendance.layout.TeacherMenu"
+        android:label="fragment_teacher_menu"
+        tools:layout="@layout/fragment_teacher_menu" >
+        <action
+            android:id="@+id/action_teacherMenu_to_userInfo"
+            app:destination="@id/userInfo" />
+    </fragment>
+    <fragment
+        android:id="@+id/userInfo"
+        android:name="com.schooltimetrack.attendance.layout.UserInfo"
+        android:label="fragment_user_info"
+        tools:layout="@layout/fragment_user_info" />
 </navigation>
