@@ -30,9 +30,10 @@ import kotlinx.coroutines.coroutineScope
 
 class MainActivity : AppCompatActivity() {
     lateinit var navController: NavController
-    public lateinit var client: Client
-    public lateinit var account: Account
-    public lateinit var databases: Databases
+    lateinit var client: Client
+    lateinit var account: Account
+    lateinit var databases: Databases
+    lateinit var userDocument: UserDocument
 
     private val requiredPermissions = arrayOf(
         Manifest.permission.CAMERA,
@@ -107,6 +108,7 @@ class MainActivity : AppCompatActivity() {
                 }
                 val userDoc = userDocDeferred.await()
 
+
                 withContext(Dispatchers.Main) {
                     // Set hardware acceleration
                     splashScreen.setLayerType(View.LAYER_TYPE_HARDWARE, null)
@@ -120,9 +122,11 @@ class MainActivity : AppCompatActivity() {
 
                     userDoc?.let {
                         val userDocument = UserDocument(
+                            userId = it.id,
                             userType = it.data["userType"].toString(),
                             name = (it.data["name"] as ArrayList<String>),
-                            gradeOrSubject = if (it.data["userType"].toString() == "student") it.data["grade"].toString() else it.data["subject"].toString(),
+                            grade = it.data["grade"].toString(),
+                            subject = it.data["subject"].toString(),
                             section = it.data["section"].toString(),
                             age = it.data["age"].toString().toInt(),
                             address = it.data["address"] as ArrayList<String>,
@@ -133,7 +137,10 @@ class MainActivity : AppCompatActivity() {
                             email = it.data["email"].toString(),
                             contactNumber = it.data["contactNumber"] as ArrayList<String>
                         )
+                        this@MainActivity.userDocument = userDocument
+
                         navController.popBackStack(R.id.welcome, true)
+
                         when (userDoc.data["userType"].toString()) {
                             "student" -> navController.navigate(
                                 R.id.studentMenu,
@@ -141,7 +148,10 @@ class MainActivity : AppCompatActivity() {
                                     putParcelable("UserDocument", userDocument)
                                 })
                             "teacher" -> navController.navigate(
-                                R.id.teacherMenu)
+                                R.id.teacherMenu,
+                                Bundle().apply {
+                                    putParcelable("UserDocument", userDocument)
+                                })
                             else -> navController.navigate(R.id.welcome)
                         }
                     }

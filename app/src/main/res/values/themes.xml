@@ -18,5 +18,13 @@
         <item name="postSplashScreenTheme">@style/Theme.SchoolTimeTrackAttendanceSystem</item>
     </style>
 
+    <style name="calendarDateTextAppearance" parent="TextAppearance.MaterialCalendarWidget.Date">
+        <item name="android:textColor">@color/mcv_text_date_light</item>
+    </style>
+
+    <style name="calendarHeaderTextAppearance" parent="TextAppearance.MaterialCalendarWidget.Header">
+        <item name="android:textColor">#000</item>
+    </style>
+
     <style name="Theme.SchoolTimeTrackAttendanceSystem" parent="Base.Theme.SchoolTimeTrackAttendanceSystem" />
 </resources>

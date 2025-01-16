@@ -126,9 +126,11 @@ class Login : Fragment() {
                                         val user = account.get()
 
                                         val userDocument = UserDocument(
+                                            userId = docId,
                                             userType = doc.data["userType"].toString(),
                                             name = (doc.data["name"] as ArrayList<String>),
-                                            gradeOrSubject = if (doc.data["userType"].toString() == "student") doc.data["grade"].toString() else doc.data["subject"].toString(),
+                                            grade = doc.data["grade"].toString(),
+                                            subject = doc.data["subject"].toString(),
                                             section = doc.data["section"].toString(),
                                             age = doc.data["age"].toString().toInt(),
                                             address = doc.data["address"] as ArrayList<String>,
@@ -147,7 +149,10 @@ class Login : Fragment() {
                                                 Bundle().apply {
                                                     putParcelable("UserDocument", userDocument)
                                                 })
-                                            "teacher" -> findNavController().navigate(R.id.action_login_to_teacherMenu)
+                                            "teacher" -> findNavController().navigate(R.id.action_login_to_teacherMenu,
+                                                Bundle().apply {
+                                                    putParcelable("UserDocument", userDocument)
+                                                })
                                         }
 
                                         withContext(Dispatchers.Main) {

@@ -51,7 +51,6 @@ class SegmentedControl @JvmOverloads constructor(
                     recycle()
                 }
             }
-
         }
         setBackgroundColors()
         clipChildren = false

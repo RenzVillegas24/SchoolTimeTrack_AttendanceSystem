@@ -6,9 +6,11 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import androidx.fragment.app.Fragment
 import com.schooltimetrack.attendance.R
 import com.schooltimetrack.attendance.MainActivity
+import com.schooltimetrack.attendance.ui.WeeklyAttendanceView
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import com.google.android.material.appbar.MaterialToolbar
@@ -19,12 +21,18 @@ import io.appwrite.services.Storage
 import io.appwrite.Query
 import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory
 import android.graphics.Bitmap
+import android.util.TypedValue
 import android.widget.Space
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.navigation.fragment.NavHostFragment
 import com.google.android.material.appbar.AppBarLayout
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.transition.MaterialSharedAxis
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.time.format.TextStyle
+import java.util.Locale
 
 class StudentMenu : Fragment() {
     private lateinit var navController: NavController
@@ -42,38 +50,47 @@ class StudentMenu : Fragment() {
         }
     }
 
+    // int as dp
+    private fun Int.toDp(): Int = (this * resources.displayMetrics.density).toInt()
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val view = inflater.inflate(R.layout.fragment_student_menu, container, false)
 
-
-        val ablToolbar = view.findViewById<AppBarLayout>(R.id.ablToolbar)
-//        val sBottom = view.findViewById<Space>(R.id.sBottom)
-
-        ViewCompat.setOnApplyWindowInsetsListener(view) { v, insets ->
-            val statusBar = insets.getInsets(WindowInsetsCompat.Type.statusBars())
-            val navBar = insets.getInsets(WindowInsetsCompat.Type.navigationBars())
-            ablToolbar.setPadding(0, statusBar.top, 0, 0)
-//            sBottom.layoutParams.height = navBar.bottom
-            insets
-        }
-        
         client = (activity as MainActivity).client
         storage = Storage(client)
         databases = (activity as MainActivity).databases
-
 
         exitTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ true)
         enterTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ true)
         reenterTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ false)
         returnTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ false)
 
-
         val toolbar = view.findViewById<MaterialToolbar>(R.id.topAppBar)
         toolbar.setNavigationIcon(R.drawable.ic_menu_rounded)
+
+        val ablToolbar = view.findViewById<AppBarLayout>(R.id.ablToolbar)
+        val weeklyAttendanceView = view.findViewById<WeeklyAttendanceView>(R.id.weeklyAttendanceView)
+        val monthYearTextView = view.findViewById<TextView>(R.id.monthYearTextView)
+
+        ViewCompat.setOnApplyWindowInsetsListener(view) { v, insets ->
+            val statusBar = insets.getInsets(WindowInsetsCompat.Type.statusBars())
+            val navBar = insets.getInsets(WindowInsetsCompat.Type.navigationBars())
+            ablToolbar.setPadding(0, statusBar.top, 0, 0)
+
+            // get the ?attr/actionBarSize attribute
+            val actionBarSize = TypedValue().apply {
+                context?.theme?.resolveAttribute(android.R.attr.actionBarSize, this, true) ?: 0
+            }.getDimension(resources.displayMetrics).toInt()
+
+            insets
+        }
 
         // Set user profile image as menu icon
         lifecycleScope.launch {
             try {
+
+//                weeklyAttendanceView.loadScheduleData()
+
                 userDocument?.let { user ->
                     // Get profile image
                     val result = storage.getFilePreview(
@@ -96,6 +113,7 @@ class StudentMenu : Fragment() {
                     toolbar.menu.findItem(R.id.userInfo)?.icon = circularBitmapDrawable
                 }
 
+
                 // Set click listener
                 toolbar.setOnMenuItemClickListener { menuItem ->
                     when (menuItem.itemId) {
@@ -111,9 +129,17 @@ class StudentMenu : Fragment() {
                         else -> false
                     }
                 }
+
             } catch (e: Exception) {
                 e.printStackTrace()
             }
+        }
+
+        // Set the onDateChangeListener to update the month and year TextView
+        weeklyAttendanceView.setOnDateChangeListener { date ->
+            val localDate = LocalDate.parse(date, DateTimeFormatter.ISO_LOCAL_DATE)
+            val monthYear = localDate.month.getDisplayName(TextStyle.FULL, Locale.getDefault()) + " " + localDate.year
+            monthYearTextView.text = monthYear
         }
 
         return view

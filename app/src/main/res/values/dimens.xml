@@ -3,4 +3,10 @@
     <dimen name="fragment_horizontal_margin">16dp</dimen>
     <dimen name="fragment_vertical_margin">16dp</dimen>
     <dimen name="text_margin">16dp</dimen>
+    <dimen name="recycler_padding">120dp</dimen>
+    <dimen name="card_max_elevation">8dp</dimen>
+
+    <dimen name="weekly_attendance_padding">24dp</dimen>
+    <dimen name="attendance_item_height">120dp</dimen>
+    <dimen name="attendance_item_padding">8dp</dimen>
 </resources>

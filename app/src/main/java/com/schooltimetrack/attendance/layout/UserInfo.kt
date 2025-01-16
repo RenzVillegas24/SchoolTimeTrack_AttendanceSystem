@@ -4,6 +4,7 @@ import UserDocument
 import android.graphics.BitmapFactory
 import android.icu.text.DateFormat
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -19,12 +20,14 @@ import androidx.lifecycle.lifecycleScope
 import android.widget.ImageView
 import android.widget.Space
 import android.widget.TextView
+import androidx.annotation.RequiresApi
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.navigation.NavController
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.textfield.TextInputLayout
 import com.google.android.material.transition.MaterialSharedAxis
 import com.schooltimetrack.attendance.MainActivity
 import com.schooltimetrack.attendance.address.AddressManager
@@ -32,10 +35,12 @@ import com.schooltimetrack.attendance.address.Barangay
 import com.schooltimetrack.attendance.address.CityMun
 import com.schooltimetrack.attendance.address.Province
 import com.schooltimetrack.attendance.address.Region
+import com.schooltimetrack.attendance.ui.SegmentedControl
 import io.appwrite.Client
 import io.appwrite.services.Account
 import io.appwrite.services.Storage
 import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 class UserInfo : Fragment() {
     private lateinit var navController: NavController
@@ -58,6 +63,7 @@ class UserInfo : Fragment() {
         account = (activity as MainActivity).account
     }
 
+    @RequiresApi(Build.VERSION_CODES.S)
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -107,11 +113,13 @@ class UserInfo : Fragment() {
                 }
             }
 
+            view.findViewById<TextInputLayout>(R.id.tilSubject).visibility = if (user.userType == "student") View.GONE else View.VISIBLE
             view.findViewById<TextView>(R.id.etFirstName).text = user.name[0]
             view.findViewById<TextView>(R.id.etMiddleName).text = user.name[1]
             view.findViewById<TextView>(R.id.etLastName).text = user.name[2]
             view.findViewById<TextView>(R.id.etSuffixName).text = user.name[3]
-            view.findViewById<TextView>(R.id.etGradeSubject).text = user.gradeOrSubject
+            view.findViewById<TextView>(R.id.etSubject).text = user.subject
+            view.findViewById<TextView>(R.id.etGrade).text = user.grade
             view.findViewById<TextView>(R.id.etSection).text = user.section
             view.findViewById<TextView>(R.id.etAge).text = user.age.toString()
             DateTimeFormatter.ISO_DATE_TIME.parse(user.birthday) { date ->
@@ -126,6 +134,13 @@ class UserInfo : Fragment() {
             view.findViewById<TextView>(R.id.etCityMun).text = user.address[2]
             view.findViewById<TextView>(R.id.etBrgy).text = user.address[3]
             view.findViewById<TextView>(R.id.etStreet).text = user.address[4]
+
+            view.findViewById<TextView>(R.id.tvAccountType).text = "${user.userType.replaceFirstChar {
+                if (it.isLowerCase()) it.titlecase(
+                    Locale.ROOT
+                ) else it.toString()
+            }} Information"
+
 
 
             // logout button

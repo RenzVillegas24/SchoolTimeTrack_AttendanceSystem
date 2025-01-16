@@ -14,6 +14,8 @@ appcompat = "1.7.0"
 material = "1.12.0"
 activity = "1.9.3"
 constraintlayout = "2.2.0"
+materialCalendar = "1.1.0"
+materialCalendarview = "2.0.0"
 navigationFragmentKtxVersion = "2.8.5"
 navigationRuntimeKtx = "2.8.4"
 navigationFragmentKtx = "2.8.4"
@@ -73,6 +75,8 @@ androidx-preference = { group = "androidx.preference", name = "preference", vers
 androidx-recyclerview = { group = "androidx.recyclerview", name = "recyclerview", version.ref = "recyclerview" }
 androidx-camera-view = { group = "androidx.camera", name = "camera-view", version.ref = "cameraView" }
 androidx-camera-lifecycle = { group = "androidx.camera", name = "camera-lifecycle", version.ref = "cameraLifecycle" }
+material-calendar = { module = "com.github.shuhart:material-calendar", version.ref = "materialCalendar" }
+material-calendarview = { module = "com.github.prolificinteractive:material-calendarview", version.ref = "materialCalendarview" }
 navigation-fragment-ktx = { module = "android.arch.navigation:navigation-fragment-ktx" }
 navigation-ui-ktx = { module = "android.arch.navigation:navigation-ui-ktx" }
 photoview = { module = "com.github.chrisbanes:PhotoView", version.ref = "photoview" }

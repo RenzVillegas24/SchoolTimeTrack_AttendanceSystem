@@ -1,6 +1,8 @@
 package com.schooltimetrack.attendance.layout
 
+import AttendanceDay
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -9,18 +11,18 @@ import android.widget.TextView
 import android.widget.TimePicker
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.schooltimetrack.attendance.R
-import com.schooltimetrack.attendance.model.AttendanceDay
-import com.schooltimetrack.attendance.model.ViewType
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 class TimeSettingsBottomSheet : BottomSheetDialogFragment() {
     private var timeSettingsListener: TimeSettingsListener? = null
-    private lateinit var selectedDate: LocalDate
+    private var selectedDates: List<LocalDate> = emptyList()
 
     interface TimeSettingsListener {
-        fun onTimeSettingsSaved(attendanceDay: AttendanceDay)
+        fun onTimeSettingsSaved(attendanceDays: List<AttendanceDay>)
     }
 
     override fun onCreateView(
@@ -34,13 +36,15 @@ class TimeSettingsBottomSheet : BottomSheetDialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        selectedDate = arguments?.getString(ARG_DATE)?.let {
-            LocalDate.parse(it)
-        } ?: LocalDate.now()
+        arguments?.getLongArray(ARG_DATES)?.forEach {
+            Log.d("TimeSettingsBottomSheet", "Date: $it")
+        }
 
-        view.findViewById<TextView>(R.id.dateText).text = selectedDate.format(
-            DateTimeFormatter.ofPattern("MMMM dd, yyyy")
-        )
+        selectedDates = arguments?.getLongArray(ARG_DATES)
+            ?.map {  Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).toLocalDate() }
+            ?: emptyList()
+
+        Log.d("TimeSettingsBottomSheet", "Selected dates: $selectedDates")
 
         val timeInPicker = view.findViewById<TimePicker>(R.id.timeInPicker)
         val timeOutPicker = view.findViewById<TimePicker>(R.id.timeOutPicker)
@@ -49,14 +53,17 @@ class TimeSettingsBottomSheet : BottomSheetDialogFragment() {
             val timeIn = LocalTime.of(timeInPicker.hour, timeInPicker.minute)
             val timeOut = LocalTime.of(timeOutPicker.hour, timeOutPicker.minute)
 
-            val attendanceDay = AttendanceDay(
-                date = selectedDate,
-                type = ViewType.CURRENT,
-                targetTimeIn = timeIn,
-                targetTimeOut = timeOut
-            )
+            val attendanceDays = selectedDates.map { date ->
+                Log.d("TimeSettingsBottomSheet", "Setting time settings for $date")
+                AttendanceDay(
+                    date = date,
+                    type = ViewType.CURRENT,
+                    targetTimeIn = timeIn,
+                    targetTimeOut = timeOut
+                )
+            }
 
-            timeSettingsListener?.onTimeSettingsSaved(attendanceDay)
+            timeSettingsListener?.onTimeSettingsSaved(attendanceDays)
             dismiss()
         }
     }
@@ -66,11 +73,11 @@ class TimeSettingsBottomSheet : BottomSheetDialogFragment() {
     }
 
     companion object {
-        private const val ARG_DATE = "date"
+        private const val ARG_DATES = "dates"
 
-        fun newInstance(date: LocalDate) = TimeSettingsBottomSheet().apply {
+        fun newInstance(dates: List<Long>) = TimeSettingsBottomSheet().apply {
             arguments = Bundle().apply {
-                putString(ARG_DATE, date.toString())
+                putLongArray(ARG_DATES, dates.toLongArray())
             }
         }
     }

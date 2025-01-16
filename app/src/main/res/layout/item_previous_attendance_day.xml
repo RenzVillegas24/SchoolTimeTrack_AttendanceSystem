@@ -4,7 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/card"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="200dp"
+    android:layout_marginVertical="@dimen/attendance_item_padding"
     app:cardElevation="2dp"
     app:cardCornerRadius="24dp"
     app:strokeWidth="0dp"
@@ -13,7 +14,7 @@
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:padding="20dp">
 
         <!-- Left side - Date and Status -->
@@ -37,16 +38,11 @@
                 android:layout_height="wrap_content"
                 android:textAppearance="@style/TextAppearance.Material3.TitleSmall"/>
 
-            <com.google.android.material.chip.Chip
-                android:id="@+id/statusChip"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                style="@style/Widget.Material3.Chip.Assist"/>
         </LinearLayout>
 
         <!-- Right  side - Times -->
         <com.google.android.material.card.MaterialCardView
+            android:id="@+id/timeContainer"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
@@ -55,7 +51,7 @@
             app:strokeWidth="1dp"
             app:strokeColor="?attr/colorOutline"
             app:layout_constraintStart_toEndOf="@id/dateContainer"
-            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintBottom_toTopOf="@id/statusChip"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent">
 
@@ -74,7 +70,7 @@
                     <com.google.android.material.textview.MaterialTextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="In"
+                        android:text="Check In"
                         android:textAppearance="@style/TextAppearance.Material3.LabelMedium"/>
 
                     <com.google.android.material.textview.MaterialTextView
@@ -82,6 +78,25 @@
                         android:layout_width= "wrap_content"
                         android:layout_height="wrap_content"
                         android:textAppearance="@style/TextAppearance.Material3.TitleMedium"/>
+
+                    <LinearLayout
+                        android:id="@+id/targetInContainer"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
+                        <com.google.android.material.textview.MaterialTextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="Target In"
+                            android:textAppearance="@style/TextAppearance.Material3.LabelMedium"/>
+
+                        <com.google.android.material.textview.MaterialTextView
+                            android:id="@+id/targetTimeInText"
+                            android:layout_width= "wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textAppearance="@style/TextAppearance.Material3.BodyMedium"/>
+                    </LinearLayout>
                 </LinearLayout>
 
                 <View
@@ -99,7 +114,7 @@
                     <com.google.android.material.textview.MaterialTextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Out"
+                        android:text="Check Out"
                         android:textAppearance="@style/TextAppearance.Material3.LabelMedium"/>
 
                     <com.google.android.material.textview.MaterialTextView 
@@ -107,8 +122,40 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:textAppearance="@style/TextAppearance.Material3.TitleMedium"/>
+
+                    <LinearLayout
+                        android:id="@+id/targetOutContainer"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
+                        <com.google.android.material.textview.MaterialTextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="Target Out"
+                            android:textAppearance="@style/TextAppearance.Material3.LabelMedium"/>
+
+                        <com.google.android.material.textview.MaterialTextView
+                            android:id="@+id/targetTimeOutText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textAppearance="@style/TextAppearance.Material3.BodyMedium"/>
+                    </LinearLayout>
                 </LinearLayout>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
+
+
+        <com.google.android.material.chip.Chip
+            android:id="@+id/statusChip"
+            android:layout_width="0dp"
+            app:chipCornerRadius="16dp"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@id/timeContainer"
+            app:layout_constraintEnd_toEndOf="@id/timeContainer"
+            app:layout_constraintStart_toStartOf="@id/timeContainer"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:textAlignment="center"
+            style="@style/Widget.Material3.Chip.Assist"/>
     </androidx.constraintlayout.widget.ConstraintLayout>
 </com.google.android.material.card.MaterialCardView>

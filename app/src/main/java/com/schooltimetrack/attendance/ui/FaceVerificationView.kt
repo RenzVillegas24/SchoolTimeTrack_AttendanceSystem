@@ -61,7 +61,8 @@ class FaceVerificationView @JvmOverloads constructor(
     private var onFaceNotDetected: (() -> Unit)? = null
     private var isDetectionPaused = false
     private var isOverlayVisible: Boolean = true
-    private var detectionDelay: Int = 3500 // Default to 2 seconds
+    var detectionDelay: Int = 2000
+        private set
     private var detectionHandler: Handler = Handler(Looper.getMainLooper())
     private var detectionRunnable: Runnable? = null
     private var faceTargets: List<Triple<String, List<String>, FloatArray>> = emptyList()

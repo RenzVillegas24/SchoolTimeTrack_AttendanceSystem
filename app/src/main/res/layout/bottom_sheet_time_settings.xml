@@ -1,18 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.schooltimetrack.attendance.ui.RoundedLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    app:cornerRadius="40dp"
-    app:roundedCorners="topLeft|topRight"
-    android:background="?attr/colorSurface"
-    android:clipChildren="true">
-
-    <com.schooltimetrack.attendance.ui.FaceVerificationView
-        android:id="@+id/faceVerificationView"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
 
     <TextView
         android:id="@+id/tvTitle"
@@ -22,20 +12,8 @@
         android:layout_marginTop="20dp"
         android:gravity="center"
         android:padding="16dp"
-        android:text="Face Verification"
+        android:text="Set Time"
         style="?attr/textAppearanceHeadlineSmall"/>
-
-    <TextView
-        android:id="@+id/tvMessage"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="top"
-        android:layout_marginTop="55dp"
-        android:gravity="center"
-        android:padding="16dp"
-        style="?attr/textAppearanceSubtitle1"
-        android:text="Align your face within the frame"/>
-
 
     <View
         android:id="@+id/indicator"
@@ -48,45 +26,61 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom"
-        android:gravity="end"
-        android:padding="8dp"
-        android:orientation="horizontal">
+        android:orientation="vertical"
+        android:layout_marginTop="60dp"
+        android:padding="16dp">
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnPause"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:visibility="gone"
-            android:text="Pause"/>
+            android:orientation="horizontal"
+            android:layout_weight="2">
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnResume"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:visibility="gone"
-            android:text="Resume"/>
+            <TextView
+                android:layout_width="100dp"
+                android:layout_height="match_parent"
+                android:layout_weight="0"
+                android:gravity="center"
+                android:text="Time In"/>
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnCancel"
-            android:layout_width="wrap_content"
+            <TimePicker
+                android:id="@+id/timeInPicker"
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:timePickerMode="spinner"/>
+
+        </LinearLayout>
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Cancel"/>
+            android:orientation="horizontal"
+            android:layout_weight="2">
+
+            <TextView
+                android:layout_width="100dp"
+                android:layout_height="match_parent"
+                android:layout_weight="0"
+                android:gravity="center"
+                android:text="Time Out"/>
+
+            <TimePicker
+                android:id="@+id/timeOutPicker"
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:timePickerMode="spinner"/>
+
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/saveButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Save"/>
+
     </LinearLayout>
 
-    <com.google.android.material.card.MaterialCardView
-        android:id="@+id/profileCardView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:visibility="gone"
-        app:cardCornerRadius="8dp"
-        >
-        <ImageView
-            android:id="@+id/profileImageView"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:scaleType="centerCrop"/>
-    </com.google.android.material.card.MaterialCardView>
-
-
-</com.schooltimetrack.attendance.ui.RoundedLayout>
+</FrameLayout>

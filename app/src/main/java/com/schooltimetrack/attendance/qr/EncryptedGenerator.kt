@@ -73,6 +73,7 @@ class EncryptedGenerator {
             put("age", info.age)
             put("address", info.address)
             put("addressId", info.addressId)
+            put("grade", info.grade)
             put("section", info.section)
             put("subject", info.subject)
             put("contactNumber", info.contactNumber)

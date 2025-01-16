@@ -3,17 +3,18 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/card"
-    android:backgroundTint="?attr/colorTertiaryContainer"
+    android:backgroundTint="?attr/colorPrimaryContainer"
     android:layout_width="match_parent"
-    android:layout_height="120dp"
+    android:layout_height="110dp"
+    android:layout_marginVertical="@dimen/attendance_item_padding"
     app:cardElevation="2dp"
-    app:cardCornerRadius="24dp"
+    app:cardCornerRadius="12dp"
     app:strokeWidth="0dp">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:padding="20dp">
+        android:padding="16dp">
 
         <!-- Left side - Date -->
         <LinearLayout
@@ -45,7 +46,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
-            app:cardCornerRadius="16dp"
+            app:cardCornerRadius="8dp"
             app:cardElevation="0dp"
             app:strokeWidth="1dp"
             app:strokeColor="?attr/colorOutline"

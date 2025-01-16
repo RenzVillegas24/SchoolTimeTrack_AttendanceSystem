@@ -128,7 +128,7 @@ class FaceVerificationBottomSheet(
         faceVerificationView.setOnDetectListener {
             gradientRadiusAnimator.apply {
                 setFloatValues(faceVerificationView.gradientRadius, 0.2f)
-                duration = 3500
+                duration = faceVerificationView.detectionDelay.toLong()
                 cancel()
                 start()
             }
@@ -139,7 +139,7 @@ class FaceVerificationBottomSheet(
             // revert the gradient radius animation
             gradientRadiusAnimator.apply {
                 setFloatValues(0.6f, faceVerificationView.gradientRadius)
-                duration = 750
+                duration = faceVerificationView.detectionDelay.toLong() / 3
                 cancel()
                 reverse()
             }

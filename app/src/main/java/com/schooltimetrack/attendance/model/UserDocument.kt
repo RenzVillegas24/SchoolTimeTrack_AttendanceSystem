@@ -2,9 +2,11 @@ import android.os.Parcelable
 
 @kotlinx.parcelize.Parcelize
 data class UserDocument(
+    val userId: String,
     val userType: String,
     val name: ArrayList<String>,
-    val gradeOrSubject: String,
+    val grade: String,
+    val subject: String,
     val section: String,
     val age: Int,
     val address: ArrayList<String>,

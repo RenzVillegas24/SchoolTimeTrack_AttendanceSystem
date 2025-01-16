@@ -48,41 +48,6 @@
             android:clipToPadding="false">
 
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Account Type"
-                android:textSize="20sp"
-                android:textStyle="bold"
-                android:layout_marginHorizontal="8dp"
-                android:layout_marginVertical="8dp"/>
-
-
-            <com.schooltimetrack.attendance.ui.SegmentedControl
-                android:id="@+id/segAccountType"
-                android:layout_width="match_parent"
-                android:layout_height="65dp"
-                android:padding="4dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:gravity="center"
-                    android:textSize="16sp"
-                    android:padding="18dp"
-                    android:text="Student" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:gravity="center"
-                    android:textSize="16sp"
-                    android:padding="18dp"
-                    android:text="Teacher" />
-
-            </com.schooltimetrack.attendance.ui.SegmentedControl>
 
             <TextView
                 android:id="@+id/tvAccountType"
@@ -471,7 +436,7 @@
                 android:layout_marginBottom="8dp">
 
                 <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/tilGradeSubject"
+                    android:id="@+id/tilGrade"
                     style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox"
                     app:boxCornerRadiusTopEnd="10dp"
                     app:boxCornerRadiusTopStart="10dp"
@@ -486,12 +451,11 @@
                     android:hint="Grade">
 
                     <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/etGradeSubject"
+                        android:id="@+id/etGrade"
                         android:layout_width="match_parent"
                         android:paddingTop="30dp"
                         android:layout_height="65dp"
-                        android:inputType="none"
-                        android:editable="false"
+                        android:inputType="number"
                         android:maxLines="1"/>
                 </com.google.android.material.textfield.TextInputLayout>
 
@@ -514,11 +478,34 @@
                         android:layout_width="match_parent"
                         android:paddingTop="30dp"
                         android:layout_height="65dp"
-                        android:inputType="none"
-                        android:editable="false"
+                        android:inputType="text|textCapWords"
                         android:maxLines="1"/>
                 </com.google.android.material.textfield.TextInputLayout>
             </LinearLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilSubject"
+                style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox"
+                app:boxCornerRadiusTopEnd="10dp"
+                app:boxCornerRadiusTopStart="10dp"
+                app:boxCornerRadiusBottomEnd="10dp"
+                app:boxCornerRadiusBottomStart="10dp"
+                app:boxStrokeWidth="0dp"
+                app:boxStrokeWidthFocused="0dp"
+                android:visibility="gone"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="8dp"
+                android:hint="Subject">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etSubject"
+                    android:layout_width="match_parent"
+                    android:paddingTop="30dp"
+                    android:layout_height="65dp"
+                    android:inputType="number"
+                    android:maxLines="1"/>
+            </com.google.android.material.textfield.TextInputLayout>
 
             <TextView
                 android:layout_width="wrap_content"

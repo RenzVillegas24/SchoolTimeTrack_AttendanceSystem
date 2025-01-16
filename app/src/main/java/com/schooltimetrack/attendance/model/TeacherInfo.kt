@@ -8,6 +8,7 @@ data class TeacherInfo(
     val age: Int,
     val address: Array<String>,
     val addressId: String,
+    val grade: String,
     val section: String,
     val subject: String,
     val contactNumber: Array<String>,

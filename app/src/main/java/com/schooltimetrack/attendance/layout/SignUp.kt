@@ -42,9 +42,12 @@ import io.appwrite.Client
 import io.appwrite.services.Account
 import io.appwrite.services.Storage
 import io.appwrite.ID
+import io.appwrite.Query
 import io.appwrite.models.InputFile
 import io.appwrite.services.Databases
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
@@ -98,8 +101,10 @@ class SignUp : Fragment() {
         val etMiddleName = view.findViewById<EditText>(R.id.etMiddleName)
         val etLastName = view.findViewById<EditText>(R.id.etLastName)
         val etSuffixName = view.findViewById<EditText>(R.id.etSuffixName)
-        val tilGradeSubject = view.findViewById<TextInputLayout>(R.id.tilGradeSubject)
-        val etGradeSubject = view.findViewById<EditText>(R.id.etGradeSubject)
+        val tilGrade = view.findViewById<TextInputLayout>(R.id.tilGrade)
+        val etGrade = view.findViewById<EditText>(R.id.etGrade)
+        val tilSubject = view.findViewById<TextInputLayout>(R.id.tilSubject)
+        val etSubject = view.findViewById<EditText>(R.id.etSubject)
         val etSection = view.findViewById<EditText>(R.id.etSection)
         val etAge = view.findViewById<EditText>(R.id.etAge)
         val etRegion = view.findViewById<AutoCompleteTextView>(R.id.etRegion)
@@ -211,8 +216,7 @@ class SignUp : Fragment() {
 
         segAccountType.setOnSegmentSelectedListener(object : SegmentedControl.OnSegmentSelectedListener {
             override fun onSegmentSelected(index: Int) {
-                tvAccountType.setText("${if (index == 0) "Student" else "Teacher"} Information")
-                tilGradeSubject.hint = if (index == 0) "Grade" else "Subject"
+                tilSubject.visibility = if (index == 1) View.VISIBLE else View.GONE
             }
         })
 
@@ -259,7 +263,8 @@ class SignUp : Fragment() {
             val middleName = etMiddleName.text.toString().trim()
             val lastName = etLastName.text.toString().trim()
             val suffixName = etSuffixName.text.toString().trim()
-            val gradeSubject = etGradeSubject.text.toString().trim()
+            val grade = etGrade.text.toString().trim()
+            val subject = etSubject.text.toString().trim()
             val section = etSection.text.toString().trim()
             val street = etStreet.text.toString().trim()
             val age = etAge.text.toString().trim()
@@ -271,124 +276,163 @@ class SignUp : Fragment() {
             val birthday = etBirthday.text.toString().trim()
             val gender = etGender.text.toString().trim()
 
-            if (firstName.isNotEmpty() && lastName.isNotEmpty() && gradeSubject.isNotEmpty() &&
-                section.isNotEmpty() && age.isNotEmpty() &&
-                selectedRegion != null && selectedProvince != null && selectedCityMun != null && selectedBrgy != null && street.isNotEmpty() &&
-                email.isNotEmpty() && password.isNotEmpty() && confPassword.isNotEmpty() &&
-                birthday.isNotEmpty() && gender.isNotEmpty() &&
-                password.matches(".*\\d.*".toRegex()) &&
-                password.matches(".*[a-z].*".toRegex()) &&
-                password.matches(".*[A-Z].*".toRegex()) &&
-                password.matches(".*[!@#\$%^&*()-+].*".toRegex()) &&
-                password.length >= 8 && password == confPassword &&
-                cbAgreeTerms.isChecked && selectedImageUri != null
-            ) {
+            viewLifecycleOwner.lifecycleScope.launch {
+                val userDocDeferred = async {
+                    databases.listDocuments(
+                        databaseId = "6774d5c500013f347412",
+                        collectionId = "6785debf002943b87bb1",
+                        queries = listOf(
+                            Query.equal("grade", grade),
+                            Query.equal("section", section),
+                            Query.equal("subject", subject)
+                        )
+                    ).documents.firstOrNull()
+                }
+                val userDoc = userDocDeferred.await()
 
-                (ivProfileImage.drawable as? BitmapDrawable)?.bitmap?.let { profileBitmap ->
-                    FaceVerificationBottomSheet(profileBitmap)  { bottomSheet,_ ->
-                        Toast.makeText(context, "Face verification successful", Toast.LENGTH_SHORT).show()
-                        bottomSheet.dismiss()
-
-                        // On verification success
-                        viewLifecycleOwner.lifecycleScope.launch {
-                            try {
-                                // Create user account
-                                val user = account.create(
-                                    userId = ID.unique(),
-                                    email = email,
-                                    password = password,
-                                    name = "$firstName $lastName"
-                                )
-
-                                val resizedBitmap = Bitmap.createScaledBitmap(profileBitmap, 750, 750, true)
-                                val byteArrayOutputStream = ByteArrayOutputStream()
-                                resizedBitmap.compress(Bitmap.CompressFormat.JPEG, 95, byteArrayOutputStream)
-                                val byteArray = byteArrayOutputStream.toByteArray()
-
-                                // Upload profile image if selected
-                                val profileImageId = withContext(Dispatchers.IO) {
-                                    val file = InputFile.fromBytes(
-                                        byteArray,
-                                        filename = "profile_${user.id}.jpg",
-                                        mimeType = "image/jpeg",
-                                    )
-                                    storage.createFile(
-                                        bucketId = "6774d59e001b225502c9",
-                                        fileId = ID.unique(),
-                                        file = file
-                                    ).id
-                                }
-
-                                // Save user data
-                                var data = mapOf(
-                                    "userType" to userType,
-                                    "name" to arrayOf(firstName, middleName, lastName, suffixName),
-                                    (if (userType == "student") "grade" else "subject") to gradeSubject,
-                                    "section" to section,
-                                    "age" to Integer.parseInt(age),
-                                    "address" to arrayOf(
-                                        (selectedRegion?.regDesc ?: "").uppercase(),
-                                        (selectedProvince?.provDesc ?: "").uppercase(),
-                                        (selectedCityMun?.citymunDesc ?: "").uppercase(),
-                                        (selectedBrgy?.brgyDesc ?: "").uppercase(),
-                                        street.uppercase()),
-                                    "addressId" to selectedBrgy?.brgyCode,
-                                    "birthday" to birthday + "T00:00:02+00:00",
-                                    "gender" to gender,
-                                    "profileImageId" to profileImageId,
-                                    "embedding" to fArrProfileImage,
-                                    "email" to email,
-                                    "contactNumber" to arrayOf(countryCode, contactNumber)
-                                )
-
-                                databases.createDocument(
-                                    databaseId = "6774d5c500013f347412",
-                                    collectionId = "677f45d0003a18299bdc",
-                                    documentId = user.id,
-                                    data = data
-                                )
-
-                                withContext(Dispatchers.Main) {
-                                    Toast.makeText(context, "Sign Up Successful", Toast.LENGTH_SHORT).show()
-                                    findNavController().navigate(R.id.action_signUp_to_login)
-                                }
-
-                                bottomSheet.dismiss()
-
-                                GeneratedQRBottomSheet(data.plus("password" to password)).show(parentFragmentManager, "GeneratedQRBottomSheet")
-
-                            } catch (e: Exception) {
-                                withContext(Dispatchers.Main) {
-                                    Toast.makeText(context, "Sign Up Failed: ${e.message}",
-                                        Toast.LENGTH_SHORT).show()
-                                }
-                                e.printStackTrace()
-                            }
-                        }
-                    }.show(parentFragmentManager, "FaceVerificationBottomSheet")
+                if (userDoc != null) {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(context, "Combination of grade, section, and subject already exists", Toast.LENGTH_SHORT).show()
+                    }
                 }
 
-            } else if (password != confPassword) {
-                Toast.makeText(context, "Passwords do not match", Toast.LENGTH_SHORT).show()
-            } else if (!cbAgreeTerms.isChecked) {
-                Toast.makeText(context, "Please agree to the terms and conditions", Toast.LENGTH_SHORT).show()
-            } else if (selectedImageUri == null) {
-                Toast.makeText(context, "Please upload a profile image", Toast.LENGTH_SHORT).show()
-            } else if (password.length < 8) {
-                Toast.makeText(context, "Password must be at least 6 characters", Toast.LENGTH_SHORT).show()
-            } else if (!password.matches(".*\\d.*".toRegex())) {
-                Toast.makeText(context, "Password must contain at least one digit", Toast.LENGTH_SHORT).show()
-            } else if (!password.matches(".*[a-z].*".toRegex())) {
-                Toast.makeText(context, "Password must contain at least one lowercase letter", Toast.LENGTH_SHORT).show()
-            } else if (!password.matches(".*[A-Z].*".toRegex())) {
-                Toast.makeText(context, "Password must contain at least one uppercase letter", Toast.LENGTH_SHORT).show()
-            } else if (!password.matches(".*[!@#\$%^&*()-+].*".toRegex())) {
-                Toast.makeText(context, "Password must contain at least one special character", Toast.LENGTH_SHORT).show()
-            } else if (!contactNumber.matches("^\\d{10}\$".toRegex())) {
-                Toast.makeText(context, "Invalid contact number format", Toast.LENGTH_SHORT).show()
-            } else {
-                Toast.makeText(context, "Please fill in all fields", Toast.LENGTH_SHORT).show()
+                if (firstName.isNotEmpty() && lastName.isNotEmpty() && grade.isNotEmpty() &&
+                    section.isNotEmpty() && age.isNotEmpty() &&
+                    selectedRegion != null && selectedProvince != null && selectedCityMun != null && selectedBrgy != null && street.isNotEmpty() &&
+                    email.isNotEmpty() && password.isNotEmpty() && confPassword.isNotEmpty() &&
+                    birthday.isNotEmpty() && gender.isNotEmpty() &&
+                    password.matches(".*\\d.*".toRegex()) &&
+                    password.matches(".*[a-z].*".toRegex()) &&
+                    password.matches(".*[A-Z].*".toRegex()) &&
+                    password.matches(".*[!@#\$%^&*()-+].*".toRegex()) &&
+                    password.length >= 8 && password == confPassword &&
+                    cbAgreeTerms.isChecked && selectedImageUri != null
+                ) {
+
+                    (ivProfileImage.drawable as? BitmapDrawable)?.bitmap?.let { profileBitmap ->
+                        FaceVerificationBottomSheet(profileBitmap)  { bottomSheet,_ ->
+                            Toast.makeText(context, "Face verification successful", Toast.LENGTH_SHORT).show()
+                            bottomSheet.dismiss()
+
+                            // On verification success
+                            viewLifecycleOwner.lifecycleScope.launch {
+                                try {
+                                    // Create user account
+                                    val user = account.create(
+                                        userId = ID.unique(),
+                                        email = email,
+                                        password = password,
+                                        name = "$firstName $lastName"
+                                    )
+
+                                    // create user new schedule if teacher
+                                    if (userType == "teacher") {
+                                        databases.createDocument(
+                                            databaseId = "6774d5c500013f347412",
+                                            collectionId = "6785debf002943b87bb1",
+                                            documentId = user.id,
+                                            data = mapOf(
+                                                "grade" to grade,
+                                                "section" to section,
+                                                "subject" to subject
+                                            )
+                                        )
+                                    }
+
+
+                                    val resizedBitmap = Bitmap.createScaledBitmap(profileBitmap, 750, 750, true)
+                                    val byteArrayOutputStream = ByteArrayOutputStream()
+                                    resizedBitmap.compress(Bitmap.CompressFormat.JPEG, 95, byteArrayOutputStream)
+                                    val byteArray = byteArrayOutputStream.toByteArray()
+
+                                    // Upload profile image if selected
+                                    val profileImageId = withContext(Dispatchers.IO) {
+                                        val file = InputFile.fromBytes(
+                                            byteArray,
+                                            filename = "profile_${user.id}.jpg",
+                                            mimeType = "image/jpeg",
+                                        )
+                                        storage.createFile(
+                                            bucketId = "6774d59e001b225502c9",
+                                            fileId = ID.unique(),
+                                            file = file
+                                        ).id
+                                    }
+
+                                    // Save user data
+                                    var data = mapOf(
+                                        "userType" to userType,
+                                        "name" to arrayOf(firstName, middleName, lastName, suffixName),
+                                        "grade" to grade,
+                                        "subject" to subject,
+                                        "section" to section,
+                                        "age" to Integer.parseInt(age),
+                                        "address" to arrayOf(
+                                            (selectedRegion?.regDesc ?: "").uppercase(),
+                                            (selectedProvince?.provDesc ?: "").uppercase(),
+                                            (selectedCityMun?.citymunDesc ?: "").uppercase(),
+                                            (selectedBrgy?.brgyDesc ?: "").uppercase(),
+                                            street.uppercase()),
+                                        "addressId" to selectedBrgy?.brgyCode,
+                                        "birthday" to birthday + "T00:00:02+00:00",
+                                        "gender" to gender,
+                                        "profileImageId" to profileImageId,
+                                        "embedding" to fArrProfileImage,
+                                        "email" to email,
+                                        "contactNumber" to arrayOf(countryCode, contactNumber)
+                                    )
+
+                                    databases.createDocument(
+                                        databaseId = "6774d5c500013f347412",
+                                        collectionId = "677f45d0003a18299bdc",
+                                        documentId = user.id,
+                                        data = data
+                                    )
+
+                                    withContext(Dispatchers.Main) {
+                                        Toast.makeText(context, "Sign Up Successful", Toast.LENGTH_SHORT).show()
+                                        findNavController().navigate(R.id.action_signUp_to_login)
+                                    }
+
+                                    bottomSheet.dismiss()
+
+                                    GeneratedQRBottomSheet(data.plus("password" to password)).show(parentFragmentManager, "GeneratedQRBottomSheet")
+
+                                } catch (e: Exception) {
+                                    withContext(Dispatchers.Main) {
+                                        Toast.makeText(context, "Sign Up Failed: ${e.message}",
+                                            Toast.LENGTH_SHORT).show()
+                                    }
+                                    e.printStackTrace()
+                                }
+                            }
+                        }.show(parentFragmentManager, "FaceVerificationBottomSheet")
+                    }
+                } else if (password != confPassword) {
+                    Toast.makeText(context, "Passwords do not match", Toast.LENGTH_SHORT).show()
+                } else if (!cbAgreeTerms.isChecked) {
+                    Toast.makeText(context, "Please agree to the terms and conditions", Toast.LENGTH_SHORT).show()
+                } else if (selectedImageUri == null) {
+                    Toast.makeText(context, "Please upload a profile image", Toast.LENGTH_SHORT).show()
+                } else if (password.length < 8) {
+                    Toast.makeText(context, "Password must be at least 6 characters", Toast.LENGTH_SHORT).show()
+                } else if (!password.matches(".*\\d.*".toRegex())) {
+                    Toast.makeText(context, "Password must contain at least one digit", Toast.LENGTH_SHORT).show()
+                } else if (!password.matches(".*[a-z].*".toRegex())) {
+                    Toast.makeText(context, "Password must contain at least one lowercase letter", Toast.LENGTH_SHORT).show()
+                } else if (!password.matches(".*[A-Z].*".toRegex())) {
+                    Toast.makeText(context, "Password must contain at least one uppercase letter", Toast.LENGTH_SHORT).show()
+                } else if (!password.matches(".*[!@#\$%^&*()-+].*".toRegex())) {
+                    Toast.makeText(context, "Password must contain at least one special character", Toast.LENGTH_SHORT).show()
+                } else if (!contactNumber.matches("^\\d{10}\$".toRegex())) {
+                    Toast.makeText(context, "Invalid contact number format", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(context, "Please fill in all fields", Toast.LENGTH_SHORT).show()
+                }
+
             }
+
+
 
         }
 

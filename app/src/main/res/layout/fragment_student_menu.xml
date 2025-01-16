@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
@@ -12,8 +11,7 @@
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/ablToolbar"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:fitsSystemWindows="true">
+        android:layout_height="wrap_content">
 
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/topAppBar"
@@ -21,30 +19,39 @@
             android:layout_height="?attr/actionBarSize"
             app:title="Student Menu"
             app:menu="@menu/top_app_bar"
+            app:titleCentered="true"
             app:navigationIcon="@drawable/ic_menu_rounded"
-            app:navigationIconTint="?attr/colorOnSurface"
-            />
+            app:navigationIconTint="?attr/colorOnSurface"/>
 
     </com.google.android.material.appbar.AppBarLayout>
 
-    <androidx.core.widget.NestedScrollView
+    <com.schooltimetrack.attendance.ui.WeeklyAttendanceView
+        android:id="@+id/weeklyAttendanceView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+        android:layout_below="@id/ablToolbar"
+        android:clipToPadding="false"
+        android:padding="16dp"/>
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:paddingVertical="16dp">
+    <TextView
+        android:id="@+id/monthYearTextView"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:layout_below="@id/ablToolbar"
+        android:paddingBottom="24dp"
+        android:paddingTop="8dp"
+        android:background="@drawable/gradient_background"
+        android:textSize="18sp"
+        android:gravity="center"
+        android:text="" />
 
-            <com.schooltimetrack.attendance.ui.WeeklyAttendanceView
-                android:id="@+id/weeklyAttendance"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"/>
 
-        </LinearLayout>
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:layout_alignParentBottom="true"
+        android:background="@drawable/gradient_background_below"
+        android:textSize="18sp"
+        android:gravity="center"/>
 
-    </androidx.core.widget.NestedScrollView>
-
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+</RelativeLayout>

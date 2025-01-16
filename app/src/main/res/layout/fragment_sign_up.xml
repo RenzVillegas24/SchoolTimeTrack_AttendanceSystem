@@ -479,7 +479,7 @@
             android:layout_marginBottom="8dp">
 
             <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/tilGradeSubject"
+                android:id="@+id/tilGrade"
                 style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox"
                 app:boxCornerRadiusTopEnd="10dp"
                 app:boxCornerRadiusTopStart="10dp"
@@ -494,7 +494,7 @@
                 android:hint="Grade">
 
                 <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/etGradeSubject"
+                    android:id="@+id/etGrade"
                     android:layout_width="match_parent"
                     android:paddingTop="30dp"
                     android:layout_height="65dp"
@@ -525,6 +525,30 @@
                     android:maxLines="1"/>
             </com.google.android.material.textfield.TextInputLayout>
         </LinearLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/tilSubject"
+            style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox"
+            app:boxCornerRadiusTopEnd="10dp"
+            app:boxCornerRadiusTopStart="10dp"
+            app:boxCornerRadiusBottomEnd="10dp"
+            app:boxCornerRadiusBottomStart="10dp"
+            app:boxStrokeWidth="0dp"
+            app:boxStrokeWidthFocused="0dp"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="8dp"
+            android:hint="Subject">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etSubject"
+                android:layout_width="match_parent"
+                android:paddingTop="30dp"
+                android:layout_height="65dp"
+                android:inputType="text|textCapWords"
+                android:maxLines="1"/>
+        </com.google.android.material.textfield.TextInputLayout>
 
         <TextView
             android:layout_width="wrap_content"
