@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources>]
+    <attr name="cornerRadius" format="dimension" />
     <declare-styleable name="RoundedLayout">
-        <attr name="cornerRadius" format="dimension" />
+        <attr name="cornerRadius" />
         <attr name="roundedCorners">
             <flag name="topLeft" value="0x1" />
             <flag name="topRight" value="0x2" />
@@ -12,7 +13,8 @@
     </declare-styleable>
     <declare-styleable name="SegmentedControl">
         <attr name="indicatorPadding" format="dimension" />
-        <attr name="selectedIndex" format="integer"/>
+        <attr name="selectedIndex" format="integer" />
+        <attr name="cornerRadius" />
     </declare-styleable>
     <declare-styleable name="ImageCropView">
         <attr name="centerCropX" format="dimension" />
@@ -22,8 +24,6 @@
         <attr name="overlayVisible" format="boolean" />
         <attr name="detectionDelay" format="integer" />
     </declare-styleable>
-
-
     <declare-styleable name="WeeklyAttendanceView">
         <attr name="android:padding" />
     </declare-styleable>

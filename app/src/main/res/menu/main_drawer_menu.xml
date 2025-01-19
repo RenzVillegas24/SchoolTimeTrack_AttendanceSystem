@@ -1,11 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-    <group android:id="@+id/calendar_group">
+    <group 
+        android:id="@+id/calendar_group"
+        android:checkableBehavior="single">
         <item
             android:id="@+id/nav_schedules"
-            android:title="Schedules" />
+            android:icon="@drawable/ic_calendar_24_filled"
+            android:title="Schedules"
+            android:checked="true" />
         <item
             android:id="@+id/nav_attendance"
+            android:icon="@drawable/ic_clipboard_task_list_rtl_24_filled"
             android:title="Attendance" />
     </group>
 </menu>

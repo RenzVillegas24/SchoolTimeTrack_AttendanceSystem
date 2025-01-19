@@ -87,7 +87,7 @@
     </fragment>
     <fragment
         android:id="@+id/teacherMenu"
-        android:name="com.schooltimetrack.attendance.layout.TeacherMenu"
+        android:name="com.schooltimetrack.attendance.layout.TeacherScheduleMenu"
         android:label="fragment_teacher_menu"
         tools:layout="@layout/fragment_teacher_menu" >
         <action

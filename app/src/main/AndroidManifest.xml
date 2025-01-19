@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools">
 
 
+    <uses-sdk />
     <uses-feature
         android:name="android.hardware.camera"
         android:required="true" />
@@ -24,6 +25,7 @@
         <activity
             android:name=".MainActivity"
             android:theme="@style/Theme.App.SplashScreen"
+            android:screenOrientation="locked"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

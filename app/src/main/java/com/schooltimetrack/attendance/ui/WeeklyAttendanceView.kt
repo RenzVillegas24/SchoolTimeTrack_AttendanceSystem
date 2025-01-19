@@ -81,9 +81,9 @@ class WeeklyAttendanceView @JvmOverloads constructor(
                     .show()
             },
             databases = (context as MainActivity).databases,
-            grade = (context as MainActivity).userDocument.grade,
-            section = (context as MainActivity).userDocument.section,
-            userId = (context as MainActivity).userDocument.userId
+            grade = (context as MainActivity).userDocument?.grade ?: "",
+            section = (context as MainActivity).userDocument?.section ?: "",
+            userId = (context as MainActivity).userDocument?.userId ?: ""
         ).apply {
             registerAdapterDataObserver(object : AdapterDataObserver() {
                 override fun onChanged() {

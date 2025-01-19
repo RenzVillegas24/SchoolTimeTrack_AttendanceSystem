@@ -7,14 +7,14 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    tools:context=".layout.StudentAttendanceMenu">
+    tools:context=".layout.StudentMenu">
 
     <androidx.coordinatorlayout.widget.CoordinatorLayout 
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:fitsSystemWindows="true"
         android:background="?attr/colorSurface"
-        tools:context=".layout.StudentAttendanceMenu">
+        tools:context=".layout.StudentMenu">
 
         <com.google.android.material.appbar.AppBarLayout
             android:id="@+id/ablToolbar"
@@ -66,6 +66,56 @@
                     android:orientation="vertical"
                     android:padding="16dp">
 
+
+                    <LinearLayout
+                        android:id="@+id/studentSelection"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:visibility="gone"
+                        android:orientation="vertical">
+
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textSize="16sp"
+                            android:layout_marginHorizontal="4dp"
+                            android:layout_marginBottom="8dp"
+                            android:text="Student Information"/>
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox.ExposedDropdownMenu"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="8dp"
+                            android:layout_marginHorizontal="4dp"
+                            app:boxCornerRadiusTopEnd="16dp"
+                            app:boxCornerRadiusTopStart="16dp"
+                            app:boxCornerRadiusBottomEnd="16dp"
+                            app:boxCornerRadiusBottomStart="16dp"
+                            app:boxStrokeWidth="0dp"
+                            app:boxStrokeWidthFocused="0dp"
+                            android:hint="Student Name">
+
+                            <AutoCompleteTextView
+                                android:id="@+id/studentSpinner"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:paddingTop="30dp"
+                                android:inputType="none"
+                                android:dropDownHeight="300dp"/>
+
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                        <LinearLayout
+                            android:id="@+id/studentAttendanceList"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:layout_marginTop="16dp"/>
+
+                    </LinearLayout>
+
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -84,28 +134,22 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_gravity="center"
                             android:gravity="center"
                             android:textSize="16sp"
-                            android:padding="18dp"
                             android:text="Single" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_gravity="center"
                             android:gravity="center"
                             android:textSize="16sp"
-                            android:padding="18dp"
                             android:text="Range" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_gravity="center"
                             android:gravity="center"
                             android:textSize="16sp"
-                            android:padding="18dp"
                             android:text="Multiple" />
 
                     </com.schooltimetrack.attendance.ui.SegmentedControl>
@@ -138,7 +182,7 @@
 
 
                     <TextView
-                        android:id="@+id/currentScheduledText"
+                        android:id="@+id/currentScheduleAttendanceText"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:textSize="16sp"

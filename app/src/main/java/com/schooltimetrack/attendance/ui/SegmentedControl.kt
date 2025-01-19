@@ -9,28 +9,26 @@ import android.graphics.RectF
 import android.os.Build
 import android.util.AttributeSet
 import android.view.MotionEvent
-import android.view.View
-import android.view.ViewGroup
-import android.view.animation.PathInterpolator
+import android.widget.LinearLayout
 import android.widget.TextView
+import android.view.animation.PathInterpolator
 import androidx.annotation.RequiresApi
-import androidx.core.view.children
 import com.google.android.material.color.MaterialColors
 import com.schooltimetrack.attendance.R
-import kotlin.math.max
 
 @RequiresApi(Build.VERSION_CODES.S)
 class SegmentedControl @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
-) : ViewGroup(context, attrs, defStyleAttr) {
+) : LinearLayout(context, attrs, defStyleAttr) {
 
     private var selectedIndex = 0
     private var currentIndicatorX = 0f
     private var segmentWidth = 0f
     private var animator: ValueAnimator? = null
     private var indicatorPadding = 12f
+    private var cornerRadius = 8f
 
     private val indicatorPaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val backgroundPaint = Paint(Paint.ANTI_ALIAS_FLAG)
@@ -38,18 +36,18 @@ class SegmentedControl @JvmOverloads constructor(
     private val backgroundRect = RectF()
 
     init {
+        orientation = HORIZONTAL
+
         context.theme.obtainStyledAttributes(
             attrs,
             R.styleable.SegmentedControl,
             0, 0).apply {
             try {
                 indicatorPadding = getDimension(R.styleable.SegmentedControl_indicatorPadding, 12f)
+                cornerRadius = getDimension(R.styleable.SegmentedControl_cornerRadius, 24f)
+                selectedIndex = getInt(R.styleable.SegmentedControl_selectedIndex, 0)
             } finally {
-                try {
-                    selectedIndex = getInt(R.styleable.SegmentedControl_selectedIndex, 0)
-                } finally {
-                    recycle()
-                }
+                recycle()
             }
         }
         setBackgroundColors()
@@ -60,6 +58,30 @@ class SegmentedControl @JvmOverloads constructor(
             val defaultPadding = context.resources.getDimensionPixelSize(
                 android.R.dimen.app_icon_size) / 8
             setPadding(defaultPadding, defaultPadding, defaultPadding, defaultPadding)
+        }
+    }
+
+    override fun onFinishInflate() {
+        super.onFinishInflate()
+        setupChildViews()
+    }
+
+    private fun setupChildViews() {
+        for (i in 0 until childCount) {
+            val child = getChildAt(i)
+            val params = LinearLayout.LayoutParams(
+                0,  // width of 0 means it will be calculated by weight
+                LayoutParams.MATCH_PARENT
+            )
+            params.weight = 1f  // equal weight for each child
+            child.layoutParams = params
+
+            val textColor = if (i == selectedIndex) {
+                MaterialColors.getColor(this, com.google.android.material.R.attr.colorOnPrimary)
+            } else {
+                MaterialColors.getColor(this, com.google.android.material.R.attr.colorOnSurface)
+            }
+            (child as? TextView)?.setTextColor(textColor)
         }
     }
 
@@ -80,60 +102,11 @@ class SegmentedControl @JvmOverloads constructor(
         setRenderEffect(null)
     }
 
-    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        var maxHeight = 0
-        var totalWidth = 0
-
-        for (child in children) {
-            measureChild(child, widthMeasureSpec, heightMeasureSpec)
-            maxHeight = max(maxHeight, child.measuredHeight)
-            totalWidth += child.measuredWidth
-        }
-
-        maxHeight += paddingTop + paddingBottom
-        totalWidth += paddingLeft + paddingRight
-
-        maxHeight = max(maxHeight, suggestedMinimumHeight)
-        totalWidth = max(totalWidth, suggestedMinimumWidth)
-
-        setMeasuredDimension(
-            resolveSize(totalWidth, widthMeasureSpec),
-            resolveSize(maxHeight, heightMeasureSpec)
-        )
-    }
-
-    override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
-        if (childCount > 0) {
-            segmentWidth = (width - paddingLeft - paddingRight).toFloat() / childCount
-            var left = paddingLeft
-
-            for (i in 0 until childCount) {
-                val child = getChildAt(i)
-                val childWidth = segmentWidth.toInt()
-                val childHeight = child.measuredHeight
-
-                val top = paddingTop + (height - paddingTop - paddingBottom - childHeight) / 2
-
-                child.layout(
-                    left,
-                    top,
-                    left + childWidth,
-                    top + childHeight
-                )
-
-                val textColor = if (i == selectedIndex) {
-                    MaterialColors.getColor(this, com.google.android.material.R.attr.colorOnPrimary)
-                } else {
-                    MaterialColors.getColor(this, com.google.android.material.R.attr.colorOnSurface)
-                }
-                (child as? TextView)?.setTextColor(textColor)
-
-                left += childWidth
-            }
-
-            currentIndicatorX = paddingLeft + selectedIndex * segmentWidth
-            updateRects()
-        }
+    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+        super.onSizeChanged(w, h, oldw, oldh)
+        segmentWidth = (width - paddingLeft - paddingRight).toFloat() / childCount
+        currentIndicatorX = paddingLeft + selectedIndex * segmentWidth
+        updateRects()
     }
 
     private fun updateRects() {
@@ -153,8 +126,8 @@ class SegmentedControl @JvmOverloads constructor(
     }
 
     override fun dispatchDraw(canvas: Canvas) {
-        canvas.drawRoundRect(backgroundRect, 24f, 24f, backgroundPaint)
-        canvas.drawRoundRect(indicatorRect, 16f, 16f, indicatorPaint)
+        canvas.drawRoundRect(backgroundRect, cornerRadius, cornerRadius, backgroundPaint)
+        canvas.drawRoundRect(indicatorRect, cornerRadius - indicatorPadding, cornerRadius - indicatorPadding, indicatorPaint)
         super.dispatchDraw(canvas)
     }
 
@@ -237,12 +210,10 @@ class SegmentedControl @JvmOverloads constructor(
         setBackgroundColors()
     }
 
-    // get selected index
     fun getSelectedIndex(): Int {
         return selectedIndex
     }
 
-    // set selected index
     fun setSelectedIndex(index: Int) {
         animateToIndex(index)
     }

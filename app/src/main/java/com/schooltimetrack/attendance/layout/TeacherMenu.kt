@@ -2,6 +2,7 @@ package com.schooltimetrack.attendance.layout
 
 import AttendanceDay
 import UserDocument
+import android.content.res.ColorStateList
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
@@ -11,15 +12,18 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ArrayAdapter
 import android.widget.LinearLayout
 import android.widget.Space
 import android.widget.TextView
+import android.widget.AutoCompleteTextView
 import androidx.annotation.RequiresApi
 import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory
 import androidx.core.view.GravityCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.children
+import androidx.core.view.forEach
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -30,6 +34,7 @@ import com.google.android.material.navigation.NavigationView
 import com.google.android.material.transition.MaterialSharedAxis
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.card.MaterialCardView
+import com.google.android.material.chip.Chip
 import com.google.android.material.color.MaterialColors
 import com.google.android.material.imageview.ShapeableImageView
 import com.schooltimetrack.attendance.MainActivity
@@ -44,6 +49,7 @@ import com.shuhart.materialcalendarview.indicator.pager.CustomPager
 import com.shuhart.materialcalendarview.indicator.pager.PagerContainer
 import com.shuhart.materialcalendarview.indicator.pager.PagerIndicatorAdapter
 import io.appwrite.Client
+import io.appwrite.Query
 import io.appwrite.services.Databases
 import io.appwrite.services.Storage
 import kotlinx.coroutines.async
@@ -56,10 +62,15 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import kotlin.properties.Delegates
 
+enum class TeacherMenuMode {
+    SCHEDULE,
+    ATTENDANCE
+}
+
 class TeacherScheduleMenu : Fragment() {
     private lateinit var selectedDatesText: TextView
     private lateinit var selectedListDatesText: TextView
-    private lateinit var currentScheduledText: TextView
+    private lateinit var currentScheduleAttendanceText: TextView
     private lateinit var currentListSchedule: LinearLayout
     private lateinit var setTimeButton: MaterialButton
     private lateinit var calendarSelection: MaterialCalendarView
@@ -70,6 +81,8 @@ class TeacherScheduleMenu : Fragment() {
     private lateinit var databases: Databases
     private lateinit var drawerLayout: DrawerLayout
     private lateinit var navView: NavigationView
+    private var currentMode = TeacherMenuMode.SCHEDULE
+    private lateinit var studentSelection: LinearLayout
 
     private var colPrimary by Delegates.notNull<Int>()
     private var colSub by Delegates.notNull<Int>()
@@ -78,6 +91,13 @@ class TeacherScheduleMenu : Fragment() {
     
     private val scheduledDates = mutableMapOf<LocalDate, AttendanceDay>()
 
+    // Add new properties
+    private var selectedStudentId: String? = null
+    private lateinit var studentSpinner: AutoCompleteTextView
+
+    // Add at the top with other properties
+    private var students: List<Map<String, Any>> = emptyList()
+    private var isCalendarEnabled = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -109,8 +129,6 @@ class TeacherScheduleMenu : Fragment() {
                     documentId = userDocument?.userId ?: ""
                 )
             }
-
-
 
             targetDates.await().let {
 
@@ -149,7 +167,7 @@ class TeacherScheduleMenu : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        val view = inflater.inflate(R.layout.fragment_teacher_schedule_menu, container, false)
+        val view = inflater.inflate(R.layout.fragment_teacher_menu, container, false)
 
         calendarSelection = view.findViewById<MaterialCalendarView>(R.id.calendarSelection)
         selectedListDatesText = view.findViewById<TextView>(R.id.selectedListDatesText)
@@ -187,12 +205,15 @@ class TeacherScheduleMenu : Fragment() {
         pager.selectedButtonTextColor = colTextPrimary
 
         selectedDatesText = view.findViewById(R.id.selectedDatesText)
-        currentScheduledText = view.findViewById(R.id.currentScheduledText)
+        currentScheduleAttendanceText = view.findViewById(R.id.currentScheduleAttendanceText)
         currentListSchedule = view.findViewById(R.id.currentListSchedule)
         setTimeButton = view.findViewById(R.id.setTimeButton)
 
+        studentSpinner = view.findViewById(R.id.studentSpinner)
+
         drawerLayout = view.findViewById(R.id.drawer_layout)
         navView = view.findViewById(R.id.nav_view)
+        studentSelection = view.findViewById(R.id.studentSelection)
 
         val sBottom = view.findViewById<Space>(R.id.sBottom)
 
@@ -215,12 +236,14 @@ class TeacherScheduleMenu : Fragment() {
         navView.setNavigationItemSelectedListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.nav_schedules -> {
-                    // Handle schedules
+                    currentMode = TeacherMenuMode.SCHEDULE
+                    updateUIForMode()
                     drawerLayout.closeDrawer(GravityCompat.START)
                     true
                 }
                 R.id.nav_attendance -> {
-                    // Handle attendance
+                    currentMode = TeacherMenuMode.ATTENDANCE
+                    updateUIForMode() 
                     drawerLayout.closeDrawer(GravityCompat.START)
                     true
                 }
@@ -232,19 +255,29 @@ class TeacherScheduleMenu : Fragment() {
         showSchedules(calendarSelection.selectedDates)
         calendarSelection.addOnRangeSelectedListener(object: OnRangeSelectedListener {
             override fun onRangeSelected(widget: MaterialCalendarView, dates: List<CalendarDay>) {
-                selectedListDatesText.text = dateGroup(calendarSelection.selectedDates.map { itt -> itt.date.time})
+                if (!isCalendarEnabled) return
+                selectedListDatesText.text = dateGroup(dates.map { itt -> itt.date.time})
                 setTimeButton.isEnabled = dates.isNotEmpty()
 
-                showSchedules(dates)
+                if (currentMode == TeacherMenuMode.ATTENDANCE && selectedStudentId != null) {
+                    showStudentAttendance(selectedStudentId!!)
+                } else {
+                    showSchedules(dates)
+                }
             }
         })
 
         calendarSelection.addOnDateChangedListener(object: OnDateSelectedListener {
             override fun onDateSelected(widget: MaterialCalendarView, date: CalendarDay, selected: Boolean) {
-                selectedListDatesText.text = dateGroup(calendarSelection.selectedDates.map { itt -> itt.date.time})
+                if (!isCalendarEnabled) return
+                selectedListDatesText.text = dateGroup(widget.selectedDates.map { itt -> itt.date.time})
                 setTimeButton.isEnabled = selected
 
-                showSchedules(widget.selectedDates)
+                if (currentMode == TeacherMenuMode.ATTENDANCE && selectedStudentId != null) {
+                    showStudentAttendance(selectedStudentId!!)
+                } else {
+                    showSchedules(widget.selectedDates) 
+                }
             }
         })
 
@@ -324,6 +357,12 @@ class TeacherScheduleMenu : Fragment() {
             showTimeSettingsDialog(calendarSelection.selectedDates.map { it.date.time })
         }
 
+        // Initialize UI for default mode
+        updateUIForMode()
+
+        // Add after navView initialization
+        updateNavigationDrawer()
+
         return view
     }
 
@@ -335,7 +374,7 @@ class TeacherScheduleMenu : Fragment() {
                 .map { it.value }
                 .sortedBy { it.date }
                 .let { days ->
-                    currentScheduledText.visibility = if (days.isNotEmpty()) View.VISIBLE else View.GONE
+                    currentScheduleAttendanceText.visibility = if (days.isNotEmpty()) View.VISIBLE else View.GONE
 
                     currentListSchedule.removeAllViews()
                     
@@ -401,7 +440,7 @@ class TeacherScheduleMenu : Fragment() {
                 }
                 }
         } else {
-            currentScheduledText.visibility = View.GONE
+            currentScheduleAttendanceText.visibility = View.GONE
             currentListSchedule.removeAllViews()
         }
 
@@ -484,5 +523,281 @@ class TeacherScheduleMenu : Fragment() {
                 }
             })
         }.show(childFragmentManager, "TimeSettings")
+    }
+
+    private fun updateNavigationDrawer() {
+        // Uncheck all items first
+        navView.menu.forEach { item ->
+            item.isChecked = false
+        }
+        
+        // Check the current mode's menu item
+        when (currentMode) {
+            TeacherMenuMode.SCHEDULE -> {
+                navView.menu.findItem(R.id.nav_schedules).isChecked = true
+            }
+            TeacherMenuMode.ATTENDANCE -> {
+                navView.menu.findItem(R.id.nav_attendance).isChecked = true
+            }
+        }
+    }
+
+    // Add this function to handle calendar state
+    private fun updateCalendarState() {
+        when (currentMode) {
+            TeacherMenuMode.SCHEDULE -> {
+                calendarSelection.isEnabled = true
+                isCalendarEnabled = true
+            }
+            TeacherMenuMode.ATTENDANCE -> {
+                calendarSelection.isEnabled = selectedStudentId != null
+                isCalendarEnabled = selectedStudentId != null
+            }
+        }
+    }
+
+    // Modify updateUIForMode()
+    private fun updateUIForMode() {
+        when (currentMode) {
+            TeacherMenuMode.SCHEDULE -> {
+                studentSelection.visibility = View.GONE
+                setTimeButton.visibility = View.VISIBLE
+                currentScheduleAttendanceText.text = "Current Schedules"
+                updateCalendarState()
+                // Reset calendar to today and refresh schedules
+                resetCalendarToToday()
+                updateScheduleDates()
+            }
+            TeacherMenuMode.ATTENDANCE -> {
+                studentSelection.visibility = View.VISIBLE
+                setTimeButton.visibility = View.GONE
+                currentScheduleAttendanceText.text = "Current Attendance"
+                // Reset calendar to today before loading student list
+                resetCalendarToToday()
+                loadStudentList()
+                updateCalendarState()
+            }
+        }
+        // Update navigation drawer state
+        updateNavigationDrawer()
+    }
+
+    // Add new helper function to reset calendar
+    private fun resetCalendarToToday() {
+        // Clear any existing selections
+        calendarSelection.clearSelection()
+        // Select today's date
+        val today = CalendarDay.today()
+        calendarSelection.selectRange(today, today)
+        // Ensure calendar shows current month
+        calendarSelection.setCurrentDate(today)
+    }
+
+    // Replace loadStudentList() with this version
+    private fun loadStudentList() {
+        lifecycleScope.launch {
+            try {
+                val studentsResult = databases.listDocuments(
+                    databaseId = "6774d5c500013f347412",
+                    collectionId = "6785debf002943b87bb1",
+                    queries = listOf(
+                        Query.equal("grade", userDocument?.grade ?: ""),
+                        Query.equal("section", userDocument?.section ?: ""),
+                        Query.equal("type", "attendance")
+                    )
+                )
+
+                // Store full student data
+                students = studentsResult.documents.map { student ->
+                    val studentDoc = databases.getDocument(
+                        databaseId = "6774d5c500013f347412",
+                        collectionId = "677f45d0003a18299bdc",
+                        documentId = student.id
+                    )
+                    student.data + studentDoc.data
+                }
+
+                val studentAdapter = ArrayAdapter(
+                    requireContext(),
+                    android.R.layout.simple_dropdown_item_1line,
+                    students.map { student ->
+                        (student["name"] as? List<*>)?.filterNotNull()?.joinToString(" ") ?: ""
+                    }
+                )
+
+                studentSpinner.setAdapter(studentAdapter)
+
+                // Auto-select first student if available
+                if (selectedStudentId == null && students.isNotEmpty()) {
+                    selectedStudentId = studentsResult.documents.first().id
+                    studentSpinner.setText(studentAdapter.getItem(0), false)
+                    updateCalendarState()
+                    if (calendarSelection.selectedDates.isNotEmpty()) {
+                        showStudentAttendance(selectedStudentId!!)
+                    }
+                }
+
+                studentSpinner.setOnItemClickListener { _, _, position, _ ->
+                    selectedStudentId = studentsResult.documents[position].id
+                    updateCalendarState()
+                    if (calendarSelection.selectedDates.isNotEmpty()) {
+                        showStudentAttendance(selectedStudentId!!)
+                    }
+                }
+
+            } catch (e: Exception) {
+                Log.e("TeacherMenu", "Error loading students", e)
+            }
+        }
+    }
+
+    private fun showStudentAttendance(studentId: String) {
+        lifecycleScope.launch {
+            try {
+                val attendance = databases.getDocument(
+                    databaseId = "6774d5c500013f347412",
+                    collectionId = "6785debf002943b87bb1",
+                    documentId = studentId
+                )
+
+                currentListSchedule.removeAllViews()
+                val selectedDates = calendarSelection.selectedDates.map { dateToDay(it.date.time) }
+
+                // Create a map of existing attendance records
+                val attendanceMap = (attendance.data["targetInOut"] as? List<*>)?.associate {
+                    val parts = it.toString().split(",")
+                    LocalDate.ofEpochDay(parts[0].toLong()) to Triple(
+                        LocalDate.ofEpochDay(parts[0].toLong()),
+                        if (parts[1] != "null") LocalTime.parse(parts[1]) else null,
+                        if (parts[2] != "null") LocalTime.parse(parts[2]) else null
+                    )
+                } ?: emptyMap()
+
+                // Get all scheduled dates and create records including absences
+                val records = selectedDates.mapNotNull { date ->
+                    scheduledDates[date]?.let { schedule ->
+                        // Use existing attendance record or create absent record
+                        attendanceMap[date] ?: Triple(date, null, null)
+                    }
+                }.sortedBy { it.first }
+
+                // Hide text if no records
+                currentScheduleAttendanceText.visibility = if (records.isEmpty()) View.GONE else View.VISIBLE
+
+                val grouped = records.groupBy { it.first.month }
+                grouped.forEach { (month, monthRecords) ->
+                    val monthCard = MaterialCardView(requireContext()).apply {
+                        setContentPadding(16.toDp(), 16.toDp(), 16.toDp(), 16.toDp())
+                        cardElevation = 0f
+                        radius = 16.toDp().toFloat()
+                        strokeWidth = 0
+                        clipChildren = false
+                        clipToPadding = false
+                        setCardBackgroundColor(MaterialColors.getColor(requireContext(), com.google.android.material.R.attr.colorSurfaceVariant, Color.WHITE))
+                    }
+
+                    val monthLayout = LinearLayout(requireContext()).apply {
+                        orientation = LinearLayout.VERTICAL
+                    }
+                    monthCard.addView(monthLayout)
+
+                    val monthTitle = TextView(requireContext()).apply {
+                        text = month.name.lowercase().replaceFirstChar { it.uppercaseChar() }
+                        textSize = 20f
+                        setTextColor(MaterialColors.getColor(requireContext(), com.google.android.material.R.attr.colorOnSurface, Color.BLACK))
+                        setPadding(0, 0, 0, 12.toDp())
+                    }
+                    monthLayout.addView(monthTitle)
+
+                    monthRecords.forEach { (date, timeIn, timeOut) ->
+                        scheduledDates[date]?.let { schedule ->
+                            val recordView = layoutInflater.inflate(
+                                R.layout.item_student_attendance_record,
+                                monthLayout,
+                                false
+                            )
+
+                            recordView.apply {
+                                // Set date info
+                                findViewById<TextView>(R.id.dateText).text = date.dayOfMonth.toString()
+                                findViewById<TextView>(R.id.dayOfWeek).text = date.dayOfWeek.toString()
+                                    .lowercase().replaceFirstChar { it.uppercase() }
+
+                                // Set target times
+                                findViewById<TextView>(R.id.targetTimeInText).text = 
+                                    schedule.targetTimeIn.format(DateTimeFormatter.ofPattern("h:mm a"))
+                                findViewById<TextView>(R.id.targetTimeOutText).text = 
+                                    schedule.targetTimeOut.format(DateTimeFormatter.ofPattern("h:mm a"))
+
+                                // Set actual attendance times
+                                findViewById<TextView>(R.id.timeInText).text = timeIn?.format(
+                                    DateTimeFormatter.ofPattern("h:mm a")
+                                ) ?: "-"
+                                findViewById<TextView>(R.id.timeOutText).text = timeOut?.format(
+                                    DateTimeFormatter.ofPattern("h:mm a")
+                                ) ?: "-"
+
+                                // Set status chip
+                                val (status, color) = when {
+                                    timeIn == null && timeOut == null -> 
+                                        Pair("Absent", MaterialColors.getColor(context, com.google.android.material.R.attr.colorError, Color.RED))
+                                    timeIn != null && timeOut == null -> 
+                                        Pair("Checked In", MaterialColors.getColor(context, com.google.android.material.R.attr.colorPrimary, Color.BLUE))
+                                    timeIn != null && timeOut != null -> {
+                                        val isLate = timeIn.isAfter(schedule.targetTimeIn)
+                                        val isEarlyOut = timeOut.isBefore(schedule.targetTimeOut)
+                                        when {
+                                            isLate && isEarlyOut -> 
+                                                Pair("Late & Early Out", MaterialColors.getColor(context, com.google.android.material.R.attr.colorError, Color.RED))
+                                            isLate -> 
+                                                Pair("Late", MaterialColors.getColor(context, com.google.android.material.R.attr.colorError, Color.RED))
+                                            isEarlyOut -> 
+                                                Pair("Early Out", MaterialColors.getColor(context, com.google.android.material.R.attr.colorError, Color.RED))
+                                            else -> 
+                                                Pair("Present", MaterialColors.getColor(context, com.google.android.material.R.attr.colorPrimary, Color.GREEN))
+                                        }
+                                    }
+                                    else -> Pair("Unknown", MaterialColors.getColor(context, com.google.android.material.R.attr.colorError, Color.RED))
+                                }
+
+                                findViewById<Chip>(R.id.statusChip).apply {
+                                    text = status
+                                    setChipBackgroundColorResource(android.R.color.transparent)
+                                    setTextColor(color)
+                                    chipStrokeWidth = 1f
+                                    chipStrokeColor = ColorStateList.valueOf(color)
+                                }
+
+                                // Add margin if not last item
+                                if (date != monthRecords.last().first) {
+                                    layoutParams = LinearLayout.LayoutParams(
+                                        LinearLayout.LayoutParams.MATCH_PARENT,
+                                        LinearLayout.LayoutParams.WRAP_CONTENT
+                                    ).apply {
+                                        setMargins(0, 0, 0, 8.toDp())
+                                    }
+                                }
+                            }
+
+                            monthLayout.addView(recordView)
+                        }
+                    }
+
+                    if (month != grouped.keys.last()) {
+                        monthCard.layoutParams = LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT
+                        ).apply {
+                            setMargins(0, 0, 0, 16.toDp())
+                        }
+                    }
+
+                    currentListSchedule.addView(monthCard)
+                }
+            } catch (e: Exception) {
+                Log.e("TeacherMenu", "Error showing attendance", e)
+                currentScheduleAttendanceText.visibility = View.GONE
+            }
+        }
     }
 }

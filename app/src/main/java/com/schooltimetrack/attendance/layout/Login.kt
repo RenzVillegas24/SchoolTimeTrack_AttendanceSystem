@@ -19,6 +19,7 @@ import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.transition.MaterialSharedAxis
 import com.ml.shubham0204.facenet_android.domain.embeddings.FaceNet
 import com.ml.shubham0204.facenet_android.domain.face_detection.FaceSpoofDetector
+import com.schooltimetrack.attendance.MainActivity
 import io.appwrite.Client
 import io.appwrite.services.Account
 import kotlinx.coroutines.launch
@@ -95,6 +96,27 @@ class Login : Fragment() {
 
                         emailQuery.documents.firstOrNull()?.let { doc ->
 
+
+                            val userDocument = UserDocument(
+                                userId = doc.id,
+                                userType = doc.data["userType"].toString(),
+                                name = (doc.data["name"] as ArrayList<String>),
+                                grade = doc.data["grade"].toString(),
+                                subject = doc.data["subject"].toString(),
+                                section = doc.data["section"].toString(),
+                                age = doc.data["age"].toString().toInt(),
+                                address = doc.data["address"] as ArrayList<String>,
+                                addressId = doc.data["addressId"].toString(),
+                                birthday = doc.data["birthday"].toString(),
+                                gender = doc.data["gender"].toString(),
+                                profileImageId = doc.data["profileImageId"].toString(),
+                                email = doc.data["email"].toString(),
+                                contactNumber = doc.data["contactNumber"] as ArrayList<String>
+                            )
+
+                            // set the mainactivity userDocument
+                            (activity as MainActivity).userDocument = userDocument
+
                             // get the profileImageId from the emailQuery
                             val profileImageId = doc.data["profileImageId"]?.toString()
                             val name = doc.data["name"]
@@ -116,6 +138,12 @@ class Login : Fragment() {
                                 Toast.makeText(context, "Face verified", Toast.LENGTH_SHORT).show()
                                 viewLifecycleOwner.lifecycleScope.launch {
                                     try {
+
+                                        // check if the user is already logged in, then log out
+                                        if (checkExistingSession()) {
+                                            account.deleteSessions()
+                                        }
+
                                         // Create an email session
                                         val session = account.createEmailPasswordSession(
                                             email = email,

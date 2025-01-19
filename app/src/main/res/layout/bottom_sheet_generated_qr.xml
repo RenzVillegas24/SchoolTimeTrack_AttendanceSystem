@@ -1,18 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.schooltimetrack.attendance.ui.RoundedLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    app:cornerRadius="40dp"
-    android:paddingBottom="-200dp"
-    app:roundedCorners="topLeft|topRight"
-    android:background="?attr/colorSurface"
-    android:clipChildren="true">
+    android:orientation="vertical">
 
     <ImageView
         android:id="@+id/ivImageQR"
         android:layout_width="match_parent"
+        android:padding="24dp"
         android:layout_height="match_parent"
         android:scaleType="fitCenter"/>
 
@@ -55,4 +50,4 @@
             android:layout_height="wrap_content"
             android:text="Exit" />
     </LinearLayout>
-</com.schooltimetrack.attendance.ui.RoundedLayout>
+</FrameLayout>

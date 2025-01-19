@@ -33,7 +33,7 @@ class MainActivity : AppCompatActivity() {
     lateinit var client: Client
     lateinit var account: Account
     lateinit var databases: Databases
-    lateinit var userDocument: UserDocument
+    var userDocument: UserDocument? = null
 
     private val requiredPermissions = arrayOf(
         Manifest.permission.CAMERA,

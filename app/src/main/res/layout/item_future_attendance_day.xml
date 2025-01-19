@@ -19,7 +19,7 @@
         <!-- Left side - Date -->
         <LinearLayout
             android:id="@+id/dateContainer"
-            android:layout_width="90dp"
+            android:layout_width="80dp"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             app:layout_constraintStart_toStartOf="parent"
@@ -38,7 +38,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textAppearance="@style/TextAppearance.Material3.TitleSmall"
-                tools:text="SAT"/>
+                tools:text="Wednesday"/>
         </LinearLayout>
 
         <!-- Right side - Target Times -->

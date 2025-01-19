@@ -33,6 +33,19 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textAppearance="@style/TextAppearance.Material3.TitleSmall"/>
+
+
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/todayText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Today"
+                android:textAppearance="@style/TextAppearance.Material3.BodySmall"
+                android:layout_marginTop="8dp"
+                android:alpha="0.5"
+                android:visibility="gone"
+                app:layout_constraintStart_toStartOf="@id/dateContainer"
+                app:layout_constraintBottom_toBottomOf="parent"/>
         </LinearLayout>
 
         <com.google.android.material.textview.MaterialTextView

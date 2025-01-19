@@ -16,10 +16,12 @@ import java.time.format.DateTimeFormatter
 import java.time.LocalTime
 import io.appwrite.services.Databases
 import io.appwrite.Query
-import io.appwrite.models.Document
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
+import com.google.android.material.color.MaterialColors
+import android.content.res.ColorStateList
+import android.graphics.Color
 
 class WeeklyAttendanceAdapter(
     private val onCheckInListener: () -> Unit,
@@ -209,7 +211,7 @@ class WeeklyAttendanceAdapter(
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AttendanceViewHolder {
         val layoutId = when (viewType) {
             ViewType.PREVIOUS.ordinal -> R.layout.item_previous_attendance_day
-            ViewType.CURRENT.ordinal -> R.layout.item_attendance_day
+            ViewType.CURRENT.ordinal -> R.layout.item_current_attendance_day
             ViewType.FUTURE.ordinal -> R.layout.item_future_attendance_day
             else -> R.layout.item_no_schedule_day
         }
@@ -241,7 +243,22 @@ class WeeklyAttendanceAdapter(
                 ViewType.CURRENT -> bindCurrentDay(attendanceDay)
                 ViewType.PREVIOUS -> bindPreviousDay(attendanceDay)
                 ViewType.FUTURE -> bindFutureDay(attendanceDay)
-                ViewType.NONE -> {}
+                ViewType.NONE -> bindNoScheduleDay(attendanceDay)
+            }
+        }
+
+        private fun Int.toDp(): Int = (this * itemView.resources.displayMetrics.density).toInt()
+
+        private fun getStatusColor(status: String): Int {
+            return when {
+                status.contains("Late") || status.contains("Early") || status == "Absent" -> 
+                    MaterialColors.getColor(itemView.context, com.google.android.material.R.attr.colorError, Color.RED)
+                status.contains("On Time") || status.contains("Overtime") || status.contains("Just In Time") ->
+                    MaterialColors.getColor(itemView.context, com.google.android.material.R.attr.colorPrimary, Color.GREEN)
+                status == "Checked In" -> 
+                    MaterialColors.getColor(itemView.context, com.google.android.material.R.attr.colorPrimary, Color.BLUE)
+                else -> 
+                    MaterialColors.getColor(itemView.context, com.google.android.material.R.attr.colorOutline, Color.GRAY)
             }
         }
 
@@ -271,12 +288,18 @@ class WeeklyAttendanceAdapter(
                 itemView.findViewById<MaterialButton>(R.id.checkOutButton)?.visibility = View.VISIBLE
             }
 
-
             itemView.findViewById<MaterialTextView>(R.id.timeInText)?.text = attendanceDay.timeIn?.format(DateTimeFormatter.ofPattern("hh:mm a")) ?: ""
             itemView.findViewById<MaterialTextView>(R.id.timeOutText)?.text = attendanceDay.timeOut?.format(DateTimeFormatter.ofPattern("hh:mm a")) ?: ""
 
             val status = calculateStatusCurrent(attendanceDay.timeIn, attendanceDay.targetTimeIn, attendanceDay.timeOut, attendanceDay.targetTimeOut)
-            statusChip.text = status
+            statusChip.apply {
+                text = status
+                val color = getStatusColor(status)
+                setChipBackgroundColorResource(android.R.color.transparent)
+                setTextColor(color)
+                chipStrokeWidth = 1f
+                chipStrokeColor = ColorStateList.valueOf(color)
+            }
         }
 
         private fun bindPreviousDay(attendanceDay: AttendanceDay) {
@@ -308,7 +331,14 @@ class WeeklyAttendanceAdapter(
             }
 
             val status = calculateStatusPrevious(attendanceDay.timeIn, attendanceDay.targetTimeIn, attendanceDay.timeOut, attendanceDay.targetTimeOut)
-            statusChip.text = status
+            statusChip.apply {
+                text = status
+                val color = getStatusColor(status)
+                setChipBackgroundColorResource(android.R.color.transparent)
+                setTextColor(color)
+                chipStrokeWidth = 1f
+                chipStrokeColor = ColorStateList.valueOf(color)
+            }
         }
 
         private fun bindFutureDay(attendanceDay: AttendanceDay) {
@@ -319,6 +349,18 @@ class WeeklyAttendanceAdapter(
 
             targetTimeInText.text = attendanceDay.targetTimeIn.format(DateTimeFormatter.ofPattern("hh:mm a"))
             targetTimeOutText.text = attendanceDay.targetTimeOut.format(DateTimeFormatter.ofPattern("hh:mm a"))
+
+        }
+
+        private fun bindNoScheduleDay(attendanceDay: AttendanceDay) {
+            if (attendanceDay.date == LocalDate.now()){
+                itemView.findViewById<MaterialTextView>(R.id.todayText)?.visibility = View.VISIBLE
+                itemView.layoutParams.height = 110.toDp()
+            } else {
+                itemView.findViewById<MaterialTextView>(R.id.todayText)?.visibility = View.GONE
+                itemView.layoutParams.height = 100.toDp()
+            }
+
 
         }
 
@@ -356,4 +398,6 @@ class WeeklyAttendanceAdapter(
             }
         }
     }
+
+
 }

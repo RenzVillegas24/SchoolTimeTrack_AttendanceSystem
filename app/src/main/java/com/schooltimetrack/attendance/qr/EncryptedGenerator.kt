@@ -1,23 +1,26 @@
 package com.schooltimetrack.attendance.qr
 
 import android.graphics.Bitmap
+import android.graphics.Bitmap.CompressFormat
+import android.graphics.BitmapFactory
 import android.graphics.Color
-import androidmads.library.qrgenearator.QRGContents;
-import androidmads.library.qrgenearator.QRGEncoder;
+import android.util.Log
+import androidmads.library.qrgenearator.QRGContents
+import androidmads.library.qrgenearator.QRGEncoder
+import com.schooltimetrack.attendance.model.StudentInfo
+import com.schooltimetrack.attendance.model.TeacherInfo
+import org.json.JSONArray
+import org.json.JSONObject
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
+import java.nio.ByteBuffer
 import java.util.Base64
+import java.util.zip.GZIPOutputStream
 import javax.crypto.Cipher
 import javax.crypto.SecretKey
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
-import org.json.JSONObject
-import android.graphics.Bitmap.CompressFormat
-import android.graphics.BitmapFactory
-import com.google.android.material.color.MaterialColors
-import com.schooltimetrack.attendance.model.StudentInfo
-import com.schooltimetrack.attendance.model.TeacherInfo
 
 
 class EncryptedGenerator {
@@ -46,19 +49,31 @@ class EncryptedGenerator {
         return String(decryptedBytes)
     }
 
+    fun FloatArray2ByteArray(values: FloatArray): ByteArray {
+        val buffer = ByteBuffer.allocate(4 * values.size)
+        for (value in values) {
+            buffer.putFloat(value)
+        }
+        return buffer.array()
+    }
+
     fun generateForStudent(info: StudentInfo, colorBlack: Int = Color.BLACK, colorWhite: Int = Color.WHITE): ByteArray {
+
+
         val jsonData = JSONObject().apply {
             put("userType", info.userType)
             put("email", info.email)
             put("password", info.password)
-            put("name", info.name)
+            put("name", JSONArray(info.name))
             put("age", info.age)
-            put("address", info.address)
+            put("birthday", info.birthday)
+            put("address", JSONArray(info.address))
             put("addressId", info.addressId)
             put("section", info.section)
             put("grade", info.grade)
-            put("contactNumber", info.contactNumber)
-            put("embedding", info.embedding)
+            put("gender", info.gender)
+            put("contactNumber", JSONArray(info.contactNumber))
+//            put("embedding", JSONArray(info.embedding))
         }
 
         return generateCode(encrypt(jsonData.toString()), colorBlack, colorWhite)
@@ -69,15 +84,17 @@ class EncryptedGenerator {
             put("userType", info.userType)
             put("email", info.email)
             put("password", info.password)
-            put("name", info.name)
+            put("name", JSONArray(info.name))
             put("age", info.age)
-            put("address", info.address)
+            put("birthday", info.birthday)
+            put("address", JSONArray(info.address))
             put("addressId", info.addressId)
             put("grade", info.grade)
             put("section", info.section)
             put("subject", info.subject)
-            put("contactNumber", info.contactNumber)
-            put("embedding", info.embedding)
+            put("gender", info.gender)
+            put("contactNumber", JSONArray(info.contactNumber))
+//            put("embedding", JSONArray(info.embedding))
         }
 
         return generateCode(encrypt(jsonData.toString()), colorBlack, colorWhite)

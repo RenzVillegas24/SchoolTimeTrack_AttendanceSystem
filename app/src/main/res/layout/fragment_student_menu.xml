@@ -7,14 +7,14 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    tools:context=".layout.StudentAttendanceMenu">
+    tools:context=".layout.StudentMenu">
 
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:fitsSystemWindows="true"
         android:background="?attr/colorSurface"
-        tools:context=".layout.StudentAttendanceMenu">
+        tools:context=".layout.StudentMenu">
 
         <!-- Existing content -->
         <com.google.android.material.appbar.AppBarLayout

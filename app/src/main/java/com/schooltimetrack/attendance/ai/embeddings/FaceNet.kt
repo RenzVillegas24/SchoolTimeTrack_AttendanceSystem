@@ -49,8 +49,7 @@ class FaceNet(context: Context, useGpu: Boolean = true, useXNNPack: Boolean = tr
                     numThreads = 4
                 }
                 useXNNPACK = useXNNPack
-//                useNNAPI = true
-                useNNAPI = false
+                useNNAPI = true
             }
         interpreter =
             Interpreter(FileUtil.loadMappedFile(context, "model/facenet_512.tflite"), interpreterOptions)

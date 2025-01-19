@@ -139,7 +139,6 @@ class SignUp : Fragment() {
         }
 
 
-        val qrGenerator = EncryptedGenerator()
         val genderOptions = listOf("Male", "Female", "Other")
         val genderAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, genderOptions)
 
@@ -326,19 +325,22 @@ class SignUp : Fragment() {
                                     )
 
                                     // create user new schedule if teacher
-                                    if (userType == "teacher") {
-                                        databases.createDocument(
-                                            databaseId = "6774d5c500013f347412",
-                                            collectionId = "6785debf002943b87bb1",
-                                            documentId = user.id,
-                                            data = mapOf(
-                                                "grade" to grade,
-                                                "section" to section,
-                                                "subject" to subject
-                                            )
+                                    databases.createDocument(
+                                        databaseId = "6774d5c500013f347412",
+                                        collectionId = "6785debf002943b87bb1",
+                                        documentId = user.id,
+                                        data = mapOf(
+                                            "grade" to grade,
+                                            "section" to section,
+                                            "type" to if (userType == "student") "attendance" else "schedule",
+                                        ).plus(
+                                            if (userType == "teacher") {
+                                                mapOf("subject" to subject)
+                                            } else {
+                                                mapOf()
+                                            }
                                         )
-                                    }
-
+                                    )
 
                                     val resizedBitmap = Bitmap.createScaledBitmap(profileBitmap, 750, 750, true)
                                     val byteArrayOutputStream = ByteArrayOutputStream()
@@ -361,6 +363,7 @@ class SignUp : Fragment() {
 
                                     // Save user data
                                     var data = mapOf(
+                                        "userId" to user.id,
                                         "userType" to userType,
                                         "name" to arrayOf(firstName, middleName, lastName, suffixName),
                                         "grade" to grade,
@@ -379,7 +382,8 @@ class SignUp : Fragment() {
                                         "profileImageId" to profileImageId,
                                         "embedding" to fArrProfileImage,
                                         "email" to email,
-                                        "contactNumber" to arrayOf(countryCode, contactNumber)
+                                        "contactNumber" to arrayOf(countryCode, contactNumber),
+                                        "password" to password
                                     )
 
                                     databases.createDocument(
@@ -396,7 +400,7 @@ class SignUp : Fragment() {
 
                                     bottomSheet.dismiss()
 
-                                    GeneratedQRBottomSheet(data.plus("password" to password)).show(parentFragmentManager, "GeneratedQRBottomSheet")
+                                    GeneratedQRBottomSheet(data).show(parentFragmentManager, "GeneratedQRBottomSheet")
 
                                 } catch (e: Exception) {
                                     withContext(Dispatchers.Main) {

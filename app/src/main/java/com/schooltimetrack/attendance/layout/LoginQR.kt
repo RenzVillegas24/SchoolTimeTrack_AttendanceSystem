@@ -1,6 +1,7 @@
 package com.schooltimetrack.attendance.layout
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -62,6 +63,9 @@ class LoginQR : Fragment() {
             previewView = previewView,
             qrGenerator = qrGenerator,
             onDecryptedDataReceived = { jsonData, encryptedScanner ->
+
+                Log.d("LoginQR", "Decrypted data: $jsonData")
+
                 // Handle the decrypted JSON data
                 val userType = jsonData.getString("userType")
                 val name = jsonData.getJSONArray("name")
@@ -74,7 +78,7 @@ class LoginQR : Fragment() {
                 val gender = jsonData.getString("gender")
                 val contactNumber = jsonData.getString("contactNumber")
                 val password = jsonData.getString("password")
-                val embedding = jsonData.getJSONArray("embedding")
+//                val embedding = jsonData.getJSONArray("embedding")
 
                 encryptedScanner.pauseScanning()
 

@@ -18,6 +18,7 @@ import com.schooltimetrack.attendance.R
 import kotlinx.coroutines.launch
 import androidx.lifecycle.lifecycleScope
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.Space
 import android.widget.TextView
 import androidx.annotation.RequiresApi
@@ -25,7 +26,9 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.navigation.NavController
 import com.google.android.material.appbar.AppBarLayout
+import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.button.MaterialButton
+import com.google.android.material.color.MaterialColors
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.TextInputLayout
 import com.google.android.material.transition.MaterialSharedAxis
@@ -35,10 +38,14 @@ import com.schooltimetrack.attendance.address.Barangay
 import com.schooltimetrack.attendance.address.CityMun
 import com.schooltimetrack.attendance.address.Province
 import com.schooltimetrack.attendance.address.Region
+import com.schooltimetrack.attendance.ui.GeneratedQRBottomSheet
 import com.schooltimetrack.attendance.ui.SegmentedControl
 import io.appwrite.Client
+import io.appwrite.Query
 import io.appwrite.services.Account
+import io.appwrite.services.Databases
 import io.appwrite.services.Storage
+import kotlinx.coroutines.async
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
@@ -48,6 +55,8 @@ class UserInfo : Fragment() {
     private lateinit var client: Client
     private lateinit var storage: Storage
     private lateinit var account: Account
+    private lateinit var databases: Databases
+    private lateinit var toolbar: MaterialToolbar
 
 
 
@@ -61,6 +70,7 @@ class UserInfo : Fragment() {
         client = (activity as MainActivity).client
         storage = Storage(client)
         account = (activity as MainActivity).account
+        databases = (activity as MainActivity).databases
     }
 
     @RequiresApi(Build.VERSION_CODES.S)
@@ -88,6 +98,12 @@ class UserInfo : Fragment() {
         reenterTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ false)
         returnTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ false)
 
+        toolbar = view.findViewById<MaterialToolbar>(R.id.toolbar)
+        toolbar.setNavigationIcon(R.drawable.ic_chevron_left_24_filled)
+        toolbar.setNavigationIconTint(MaterialColors.getColor(requireContext(), com.google.android.material.R.attr.colorOnSurface, "colorOnSurface"))
+        toolbar.setNavigationOnClickListener {
+            navController.popBackStack()
+        }
 
         userDocument?.let { user ->
 
@@ -142,6 +158,80 @@ class UserInfo : Fragment() {
             }} Information"
 
 
+            // Generate Login QR Code
+            view.findViewById<MaterialButton>(R.id.btnGenerateLoginQR).setOnClickListener {
+                lifecycleScope.launch {
+                    databases.listDocuments(
+                        databaseId = "6774d5c500013f347412",
+                        collectionId = "677f45d0003a18299bdc",
+                        queries = listOf(
+                            Query.equal("email", user.email)
+                        )
+                    ).documents.firstOrNull()?.let { userDoc ->
+
+                        //  material alert dialog with password input
+                        MaterialAlertDialogBuilder(requireContext()).apply {
+                            setTitle("Enter Password")
+                            setMessage("Please enter your password to continue.")
+                            val view = layoutInflater.inflate(R.layout.dialog_password_field, null)
+                            val etPassword = view.findViewById<EditText>(R.id.etPassword)
+                            etPassword.requestFocus()
+                            setView(view)
+                            setPositiveButton("OK") { dialog, _ ->
+                                val password = etPassword.text.toString()
+
+                                lifecycleScope.launch {
+
+                                    if (password == userDoc.data["password"].toString()) {
+
+                                        dialog.dismiss()
+
+                                        val data = mapOf(
+                                            "userId" to userDoc.id,
+                                            "userType" to userDoc.data["userType"].toString(),
+                                            "name" to (userDoc.data["name"] as ArrayList<String>).toTypedArray(),
+                                            "grade" to userDoc.data["grade"].toString(),
+                                            "subject" to userDoc.data["subject"].toString(),
+                                            "section" to userDoc.data["section"].toString(),
+                                            "age" to userDoc.data["age"].toString().toInt(),
+                                            "birthday" to userDoc.data["birthday"].toString(),
+                                            "address" to (userDoc.data["address"] as ArrayList<String>).toTypedArray(),
+                                            "addressId" to userDoc.data["addressId"].toString(),
+                                            "birthday" to userDoc.data["birthday"].toString(),
+                                            "gender" to userDoc.data["gender"].toString(),
+                                            "profileImageId" to userDoc.data["profileImageId"].toString(),
+                                            "embedding" to (userDoc.data["embedding"] as ArrayList<Double>).map { it.toFloat() }.toFloatArray(),
+                                            "email" to userDoc.data["email"].toString(),
+                                            "password" to password,
+                                            "contactNumber" to (userDoc.data["contactNumber"] as ArrayList<String>).toArray(arrayOfNulls<String>(0))
+                                        )
+
+                                        Log.d("QR Data", data.toString())
+                                        GeneratedQRBottomSheet(data).show(parentFragmentManager, "GeneratedQRBottomSheet")
+                                    } else {
+                                        MaterialAlertDialogBuilder(requireContext()).apply {
+                                            setTitle("Incorrect Password")
+                                            setMessage("The password you entered is incorrect.")
+                                            setPositiveButton("OK") { dialog, _ ->
+                                                dialog.dismiss()
+                                            }
+                                        }.show()
+                                    }
+
+                                }
+
+                            }
+                            setNegativeButton("Cancel") { dialog, _ ->
+                                dialog.dismiss()
+                            }
+                        }.show()
+
+                    }
+
+                }
+            }
+
+
 
             // logout button
             view.findViewById<MaterialButton>(R.id.btnLogout).setOnClickListener {
@@ -152,6 +242,7 @@ class UserInfo : Fragment() {
                         lifecycleScope.launch {
                             try {
                                 account.deleteSessions()
+                                (activity as MainActivity).userDocument = null
                             } catch (e: Exception) {
                                 e.printStackTrace()
                             } finally {

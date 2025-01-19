@@ -54,6 +54,8 @@ class GeneratedQRBottomSheet(
                     section = json["section"] as String,
                     grade = json["grade"] as String,
                     contactNumber = json["contactNumber"] as Array<String>,
+                    birthday = json["birthday"] as String,
+                    gender = json["gender"] as String,
                     embedding = json["embedding"] as FloatArray
                 ),
                 Color.TRANSPARENT,
@@ -72,6 +74,8 @@ class GeneratedQRBottomSheet(
                     section = json["section"] as String,
                     subject = json["subject"] as String,
                     contactNumber = json["contactNumber"] as Array<String>,
+                    birthday = json["birthday"] as String,
+                    gender = json["gender"] as String,
                     embedding = json["embedding"] as FloatArray
                 ),
                 Color.TRANSPARENT,
@@ -101,6 +105,8 @@ class GeneratedQRBottomSheet(
                         section = json["section"] as String,
                         grade = json["grade"] as String,
                         contactNumber = json["contactNumber"] as Array<String>,
+                        birthday = json["birthday"] as String,
+                        gender = json["gender"] as String,
                         embedding = json["embedding"] as FloatArray
                     ),
                     Color.TRANSPARENT,
@@ -119,6 +125,8 @@ class GeneratedQRBottomSheet(
                         section = json["section"] as String,
                         subject = json["subject"] as String,
                         contactNumber = json["contactNumber"] as Array<String>,
+                        birthday = json["birthday"] as String,
+                        gender = json["gender"] as String,
                         embedding = json["embedding"] as FloatArray
                     ),
                     Color.TRANSPARENT,
@@ -129,7 +137,7 @@ class GeneratedQRBottomSheet(
             val qrBitmap = BitmapFactory.decodeByteArray(qrData, 0, qrData.size)
 
             // add text to QR code
-            val bitmap = Bitmap.createBitmap(qrBitmap.width, qrBitmap.height + 200, Bitmap.Config.ARGB_8888).apply {
+            val bitmap = Bitmap.createBitmap(qrBitmap.width + 50, qrBitmap.height + 200, Bitmap.Config.ARGB_8888).apply {
                 val canvas = Canvas(this)
                 canvas.drawColor(Color.WHITE)
                 val paint = android.graphics.Paint().apply {
@@ -138,17 +146,17 @@ class GeneratedQRBottomSheet(
                     textAlign = android.graphics.Paint.Align.CENTER
                 }
                 val xPos = canvas.width / 2
-                val yPos = 90
+                val yPos = 80
                 canvas.drawText("Scan the QR to be able to login to the",
                     xPos.toFloat(), yPos.toFloat(), paint.apply {
-                        textSize = 23f
+                        textSize = 25f
                     })
-                canvas.drawText("School Time Track app",
-                xPos.toFloat(), yPos + 42f, paint.apply {
-                    textSize = 39f
+                canvas.drawText("SCHOOL TIME TRACK app",
+                xPos.toFloat(), yPos + 44f, paint.apply {
+                    textSize = 37f
                     isFakeBoldText = true
                 })
-                canvas.drawBitmap(qrBitmap, 0f, 170f, null)
+                canvas.drawBitmap(qrBitmap, 25f, 170f, null)
             }
 
             // save the bitmap to gallery
@@ -178,9 +186,7 @@ class GeneratedQRBottomSheet(
             bottomSheet?.let {
                 val behavior = BottomSheetBehavior.from(it)
                 behavior.state = BottomSheetBehavior.STATE_EXPANDED
-                behavior.peekHeight = 0
 
-                // set the height as maximum height minus the height of the status bar
                 val displayMetrics = resources.displayMetrics
                 val height = displayMetrics.heightPixels
                 // get the status bar height
@@ -190,15 +196,8 @@ class GeneratedQRBottomSheet(
                 params.height = height - statusBarHeight
                 it.layoutParams = params
 
-                it.background = null
-
             }
         }
-        // Keep the status bar color unchanged
-        dialog.window?.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
-        dialog.window?.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
-        dialog.window?.statusBarColor = Color.TRANSPARENT
-        dialog.window?.navigationBarColor = MaterialColors.getColor(context, com.google.android.material.R.attr.colorSurface, "colorSurface")
 
         return dialog
     }

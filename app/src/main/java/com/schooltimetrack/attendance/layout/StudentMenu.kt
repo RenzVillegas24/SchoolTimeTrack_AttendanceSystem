@@ -34,7 +34,7 @@ import com.google.android.material.navigation.NavigationView
 import androidx.core.view.GravityCompat
 import com.google.android.material.imageview.ShapeableImageView
 
-class StudentAttendanceMenu : Fragment() {
+class StudentMenu : Fragment() {
     private lateinit var navController: NavController
     private lateinit var client: Client
     private lateinit var storage: Storage
@@ -56,7 +56,7 @@ class StudentAttendanceMenu : Fragment() {
     private fun Int.toDp(): Int = (this * resources.displayMetrics.density).toInt()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        val view = inflater.inflate(R.layout.fragment_student_attendance_menu, container, false)
+        val view = inflater.inflate(R.layout.fragment_student_menu, container, false)
 
         client = (activity as MainActivity).client
         storage = Storage(client)
@@ -181,7 +181,7 @@ class StudentAttendanceMenu : Fragment() {
     companion object {
         @JvmStatic
         fun newInstance(userDocument: UserDocument) =
-            StudentAttendanceMenu().apply {
+            StudentMenu().apply {
                 arguments = Bundle().apply {
                     putParcelable("UserDocument", userDocument)
                 }
