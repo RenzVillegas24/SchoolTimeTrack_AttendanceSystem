@@ -12,20 +12,26 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
+import android.widget.Space
 import android.widget.TextView
 import androidx.annotation.RequiresApi
 import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory
+import androidx.core.view.GravityCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.children
+import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.appbar.MaterialToolbar
+import com.google.android.material.navigation.NavigationView
 import com.google.android.material.transition.MaterialSharedAxis
 import com.google.android.material.button.MaterialButton
+import com.google.android.material.card.MaterialCardView
 import com.google.android.material.color.MaterialColors
+import com.google.android.material.imageview.ShapeableImageView
 import com.schooltimetrack.attendance.MainActivity
 import com.schooltimetrack.attendance.R
 import com.schooltimetrack.attendance.ui.SegmentedControl
@@ -38,7 +44,6 @@ import com.shuhart.materialcalendarview.indicator.pager.CustomPager
 import com.shuhart.materialcalendarview.indicator.pager.PagerContainer
 import com.shuhart.materialcalendarview.indicator.pager.PagerIndicatorAdapter
 import io.appwrite.Client
-import io.appwrite.services.Account
 import io.appwrite.services.Databases
 import io.appwrite.services.Storage
 import kotlinx.coroutines.async
@@ -49,10 +54,9 @@ import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import java.util.Locale
 import kotlin.properties.Delegates
 
-class TeacherMenu : Fragment() {
+class TeacherScheduleMenu : Fragment() {
     private lateinit var selectedDatesText: TextView
     private lateinit var selectedListDatesText: TextView
     private lateinit var currentScheduledText: TextView
@@ -64,7 +68,8 @@ class TeacherMenu : Fragment() {
     private lateinit var client: Client
     private lateinit var storage: Storage
     private lateinit var databases: Databases
-
+    private lateinit var drawerLayout: DrawerLayout
+    private lateinit var navView: NavigationView
 
     private var colPrimary by Delegates.notNull<Int>()
     private var colSub by Delegates.notNull<Int>()
@@ -136,12 +141,15 @@ class TeacherMenu : Fragment() {
         }
     }
 
+    private fun Int.toDp(): Int = (this * resources.displayMetrics.density).toInt()
+
+
     @RequiresApi(Build.VERSION_CODES.S)
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        val view = inflater.inflate(R.layout.fragment_teacher_menu, container, false)
+        val view = inflater.inflate(R.layout.fragment_teacher_schedule_menu, container, false)
 
         calendarSelection = view.findViewById<MaterialCalendarView>(R.id.calendarSelection)
         selectedListDatesText = view.findViewById<TextView>(R.id.selectedListDatesText)
@@ -164,11 +172,6 @@ class TeacherMenu : Fragment() {
 
         val ablToolbar = view.findViewById<AppBarLayout>(R.id.ablToolbar)
 
-        ViewCompat.setOnApplyWindowInsetsListener(view) { v, insets ->
-            val statusBar = insets.getInsets(WindowInsetsCompat.Type.statusBars())
-            ablToolbar.setPadding(0, statusBar.top, 0, 0)
-            insets
-        }
 
         colPrimary = MaterialColors.getColor(requireContext(), com.google.android.material.R.attr.colorPrimary  , Color.BLACK)
         colSub = MaterialColors.getColor(requireContext(), com.google.android.material.R.attr.colorSecondaryContainer, Color.BLACK)
@@ -188,7 +191,42 @@ class TeacherMenu : Fragment() {
         currentListSchedule = view.findViewById(R.id.currentListSchedule)
         setTimeButton = view.findViewById(R.id.setTimeButton)
 
+        drawerLayout = view.findViewById(R.id.drawer_layout)
+        navView = view.findViewById(R.id.nav_view)
 
+        val sBottom = view.findViewById<Space>(R.id.sBottom)
+
+        ViewCompat.setOnApplyWindowInsetsListener(view) { v, insets ->
+            val statusBar = insets.getInsets(WindowInsetsCompat.Type.statusBars())
+            val navBar = insets.getInsets(WindowInsetsCompat.Type.navigationBars())
+            ablToolbar.setPadding(0, statusBar.top, 0, 0)
+            navView.getHeaderView(0)?.setPadding(16.toDp(), statusBar.top + 32.toDp(), 16.toDp(), 16.toDp())
+            sBottom.layoutParams.height = navBar.bottom
+
+            insets
+        }
+
+        // Setup navigation drawer
+        toolbar.setNavigationOnClickListener {
+            drawerLayout.open()
+        }
+
+        // Handle navigation item selection
+        navView.setNavigationItemSelectedListener { menuItem ->
+            when (menuItem.itemId) {
+                R.id.nav_schedules -> {
+                    // Handle schedules
+                    drawerLayout.closeDrawer(GravityCompat.START)
+                    true
+                }
+                R.id.nav_attendance -> {
+                    // Handle attendance
+                    drawerLayout.closeDrawer(GravityCompat.START)
+                    true
+                }
+                else -> false
+            }
+        }
 
         calendarSelection.selectRange(CalendarDay.today(), CalendarDay.today())
         showSchedules(calendarSelection.selectedDates)
@@ -239,6 +277,16 @@ class TeacherMenu : Fragment() {
                     // Convert to bitmap
                     val bitmap = BitmapFactory.decodeByteArray(result, 0, result.size)
 
+
+                    // Update the header with user info
+                    navView.getHeaderView(0)?.let { header ->
+                        header.findViewById<TextView>(R.id.nav_header_name)?.text = userDocument?.name?.filter { it.isNotEmpty() }?.joinToString(" ")
+                        header.findViewById<TextView>(R.id.nav_header_email)?.text = userDocument?.email
+                        val imageView = header.findViewById<ShapeableImageView>(R.id.nav_header_image)
+                        imageView.setImageBitmap(bitmap)
+                    }
+
+
                     // Create circular bitmap drawable
                     val circularBitmapDrawable = RoundedBitmapDrawableFactory.create(
                         resources,
@@ -285,32 +333,72 @@ class TeacherMenu : Fragment() {
             Log.d("TeacherMenu", "Selected dates: $selectedDates")
             scheduledDates.filterKeys { it in selectedDates }
                 .map { it.value }
+                .sortedBy { it.date }
                 .let { days ->
                     currentScheduledText.visibility = if (days.isNotEmpty()) View.VISIBLE else View.GONE
 
                     currentListSchedule.removeAllViews()
-                    // add the item future schedule
-                    days.forEach { day ->
-                        layoutInflater.inflate(R.layout.item_normal_attendance_day, currentListSchedule, false).let { it ->
-                            it.findViewById<TextView>(R.id.dateText).text = day.date.dayOfMonth.toString()
-                            // Word case
-                            it.findViewById<TextView>(R.id.dayOfWeek).text = day.date.dayOfWeek.toString()
-                                .lowercase()
-                                .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.ROOT) else it.toString() }
-                            it.findViewById<TextView>(R.id.targetTimeInText).text = DateTimeFormatter.ofPattern("h:mm a").format(day.targetTimeIn)
-                            it.findViewById<TextView>(R.id.targetTimeOutText).text = DateTimeFormatter.ofPattern("h:mm a").format(day.targetTimeOut)
-                            currentListSchedule.addView(it)
+                    
+                    
+                val grouped = days.groupBy { it.date.month }
+                grouped.forEach { (month, items) ->
+                   val monthCard = MaterialCardView(requireContext()).apply {
+                        setContentPadding(16.toDp(), 16.toDp(), 16.toDp(), 16.toDp())
+                        cardElevation = 0f
+                        radius = 16.toDp().toFloat()
+                        setCardBackgroundColor(MaterialColors.getColor(requireContext(), com.google.android.material.R.attr.colorSurfaceVariant, Color.WHITE))
+                       clipToPadding = false
+                        clipChildren = false
+                       strokeWidth = 0
+                    }
+                    val monthLinearLayout = LinearLayout(requireContext()).apply {
+                        orientation = LinearLayout.VERTICAL
+                    }
+                    monthCard.addView(monthLinearLayout)
 
+                    val monthTitle = TextView(requireContext()).apply {
+                        text = month.name.lowercase().replaceFirstChar { it.uppercaseChar() }
+                        textSize = 20f
+                        setTextColor(MaterialColors.getColor(requireContext(), com.google.android.material.R.attr.colorOnSurface, Color.BLACK))
+                        setPadding(0, 0, 0, 12.toDp())
+                    }
+                    monthLinearLayout.addView(monthTitle)
 
-                            if (day != days.last()) {
-                                View(context).let {
-                                    it.layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 32)
-                                    currentListSchedule.addView(it)
+                    items.sortedBy { it.date }.forEach { day ->
+                        val dayView = layoutInflater.inflate(R.layout.item_normal_attendance_day, null).apply {
+                            findViewById<TextView>(R.id.dateText).text = day.date.dayOfMonth.toString()
+                            findViewById<TextView>(R.id.dayOfWeek).text = day.date.dayOfWeek.name.lowercase()
+                                .replaceFirstChar { ch -> ch.uppercaseChar() }
+                            findViewById<TextView>(R.id.targetTimeInText).text =
+                                DateTimeFormatter.ofPattern("h:mm a").format(day.targetTimeIn)
+                            findViewById<TextView>(R.id.targetTimeOutText).text =
+                                DateTimeFormatter.ofPattern("h:mm a").format(day.targetTimeOut)
+
+                            // set margin for the day view if not the last item
+                            if (day != items.last()) {
+                                layoutParams = LinearLayout.LayoutParams(
+                                    LinearLayout.LayoutParams.MATCH_PARENT,
+                                    LinearLayout.LayoutParams.WRAP_CONTENT
+                                ).apply {
+                                    setMargins(0, 0, 0, 8.toDp())
                                 }
                             }
                         }
-
+                        monthLinearLayout.addView(dayView)
                     }
+
+                    // set margin for the month card if not the last item
+                    if (month != grouped.keys.last()) {
+                        monthCard.layoutParams = LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT
+                        ).apply {
+                            setMargins(0, 0, 0, 16.toDp())
+                        }
+                    }
+
+                    currentListSchedule.addView(monthCard)
+                }
                 }
         } else {
             currentScheduledText.visibility = View.GONE

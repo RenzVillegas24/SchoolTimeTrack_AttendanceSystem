@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <group android:id="@+id/calendar_group">
+        <item
+            android:id="@+id/nav_schedules"
+            android:title="Schedules" />
+        <item
+            android:id="@+id/nav_attendance"
+            android:title="Attendance" />
+    </group>
+</menu>
