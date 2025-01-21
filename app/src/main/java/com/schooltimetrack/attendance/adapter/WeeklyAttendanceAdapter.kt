@@ -297,7 +297,6 @@ class WeeklyAttendanceAdapter(
                 val color = getStatusColor(status)
                 setChipBackgroundColorResource(android.R.color.transparent)
                 setTextColor(color)
-                chipStrokeWidth = 1f
                 chipStrokeColor = ColorStateList.valueOf(color)
             }
         }
@@ -336,7 +335,6 @@ class WeeklyAttendanceAdapter(
                 val color = getStatusColor(status)
                 setChipBackgroundColorResource(android.R.color.transparent)
                 setTextColor(color)
-                chipStrokeWidth = 1f
                 chipStrokeColor = ColorStateList.valueOf(color)
             }
         }

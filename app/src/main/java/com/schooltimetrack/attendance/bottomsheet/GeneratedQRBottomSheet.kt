@@ -184,19 +184,33 @@ class GeneratedQRBottomSheet(
         dialog.setOnShowListener {
             val bottomSheet = dialog.findViewById<View>(com.google.android.material.R.id.design_bottom_sheet) as? ViewGroup
             bottomSheet?.let {
-                val behavior = BottomSheetBehavior.from(it)
-                behavior.state = BottomSheetBehavior.STATE_EXPANDED
-
+                // set the height as maximum height minus the height of the status bar
                 val displayMetrics = resources.displayMetrics
                 val height = displayMetrics.heightPixels
+
                 // get the status bar height
                 val resourceId = resources.getIdentifier("status_bar_height", "dimen", "android")
                 val statusBarHeight = if (resourceId > 0) resources.getDimensionPixelSize(resourceId) else 0
-                val params = it.layoutParams
-                params.height = height - statusBarHeight
-                it.layoutParams = params
 
+                it.layoutParams = it.layoutParams.apply {
+                    this.height = height - statusBarHeight
+                }
+
+                BottomSheetBehavior.from(it).apply {
+                    state = BottomSheetBehavior.STATE_EXPANDED
+                    skipCollapsed = true
+                    isDraggable = false
+                    peekHeight = height - statusBarHeight
+                }
             }
+        }
+
+        // Keep the status bar color unchanged
+        dialog.window?.apply {
+            addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
+            clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
+            statusBarColor = Color.TRANSPARENT
+            navigationBarColor = Color.TRANSPARENT
         }
 
         return dialog
