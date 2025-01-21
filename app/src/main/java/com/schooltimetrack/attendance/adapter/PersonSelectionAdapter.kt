@@ -1,4 +1,4 @@
-package com.schooltimetrack.attendance.ui
+package com.schooltimetrack.attendance.adapter
 
 import android.graphics.Bitmap
 import android.graphics.Canvas
@@ -10,6 +10,7 @@ import android.widget.ImageView
 import androidx.recyclerview.widget.RecyclerView
 import com.google.mlkit.vision.face.Face
 import com.schooltimetrack.attendance.R
+import com.schooltimetrack.attendance.ui.SkeletonFace
 
 class PersonSelectionAdapter(
     private val faces: List<Any>, // Changed to Any to handle both Face and SkeletonFace

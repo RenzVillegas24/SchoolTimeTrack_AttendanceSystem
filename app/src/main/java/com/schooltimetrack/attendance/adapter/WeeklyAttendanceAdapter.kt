@@ -1,3 +1,8 @@
+package com.schooltimetrack.attendance.adapter
+
+import AttendanceDay
+import AttendanceRecord
+import ViewType
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
@@ -182,7 +187,7 @@ class WeeklyAttendanceAdapter(
                         )
                     )
                 } else {
-                    Log.e("WeeklyAttendanceAdapter", "Cannot check out without checking in first")
+                    Log.e("com.schooltimetrack.attendance.adapter.WeeklyAttendanceAdapter", "Cannot check out without checking in first")
                     return
                 }
             }
@@ -204,7 +209,7 @@ class WeeklyAttendanceAdapter(
             // Reload data to refresh UI
             loadScheduleData()
         } catch (e: Exception) {
-            Log.e("WeeklyAttendanceAdapter", "Error updating attendance", e)
+            Log.e("com.schooltimetrack.attendance.adapter.WeeklyAttendanceAdapter", "Error updating attendance", e)
         }
     }
 

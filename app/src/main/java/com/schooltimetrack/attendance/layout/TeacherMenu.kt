@@ -39,6 +39,7 @@ import com.google.android.material.color.MaterialColors
 import com.google.android.material.imageview.ShapeableImageView
 import com.schooltimetrack.attendance.MainActivity
 import com.schooltimetrack.attendance.R
+import com.schooltimetrack.attendance.bottomsheet.TimeSettingsBottomSheet
 import com.schooltimetrack.attendance.ui.SegmentedControl
 import com.shuhart.materialcalendarview.CalendarDay
 import com.shuhart.materialcalendarview.MaterialCalendarView
@@ -105,11 +106,9 @@ class TeacherScheduleMenu : Fragment() {
 
 
         // Initialize Appwrite
-        client = Client(requireContext())
-            .setEndpoint("https://cloud.appwrite.io/v1")
-            .setProject("6773c26a001612edc5fb")
-        databases = Databases(client)
-        storage = Storage(client)
+        client = (activity as MainActivity).client
+        storage = (activity as MainActivity).storage
+        databases = (activity as MainActivity).databases
 
         arguments?.let {
             userDocument = it.getParcelable("UserDocument")
@@ -171,7 +170,11 @@ class TeacherScheduleMenu : Fragment() {
 
         calendarSelection = view.findViewById<MaterialCalendarView>(R.id.calendarSelection)
         selectedListDatesText = view.findViewById<TextView>(R.id.selectedListDatesText)
-        val segSelectionType = view.findViewById<SegmentedControl>(R.id.segSelectionType)
+        val segSelectionType = try {
+            view.findViewById<SegmentedControl>(R.id.segSelectionType)
+        } catch (e: Exception) {
+            TODO("Not yet implemented")
+        }
 
         client = (activity as MainActivity).client
         storage = Storage(client)
@@ -673,12 +676,19 @@ class TeacherScheduleMenu : Fragment() {
                     )
                 } ?: emptyMap()
 
-                // Get all scheduled dates and create records including absences
+                val today = LocalDate.now()
+                
+                // Filter out future dates when creating records
                 val records = selectedDates.mapNotNull { date ->
-                    scheduledDates[date]?.let { schedule ->
-                        // Use existing attendance record or create absent record
-                        attendanceMap[date] ?: Triple(date, null, null)
-                    }
+                    // Only include dates up to today
+                    // if (date.isAfter(today)) {
+                    //     null
+                    // } else {
+                        scheduledDates[date]?.let { schedule ->
+                            // Use existing attendance record or create absent record
+                            attendanceMap[date] ?: Triple(date, null, null)
+                        }
+                    // }
                 }.sortedBy { it.first }
 
                 // Hide text if no records
@@ -739,6 +749,8 @@ class TeacherScheduleMenu : Fragment() {
 
                                 // Set status chip
                                 val (status, color) = when {
+                                    date.isAfter(today) -> 
+                                        Pair("Upcoming", MaterialColors.getColor(context, com.google.android.material.R.attr.colorOutline, Color.GRAY))
                                     timeIn == null && timeOut == null -> 
                                         Pair("Absent", MaterialColors.getColor(context, com.google.android.material.R.attr.colorError, Color.RED))
                                     timeIn != null && timeOut == null -> 
@@ -764,7 +776,6 @@ class TeacherScheduleMenu : Fragment() {
                                     text = status
                                     setChipBackgroundColorResource(android.R.color.transparent)
                                     setTextColor(color)
-                                    chipStrokeWidth = 1f
                                     chipStrokeColor = ColorStateList.valueOf(color)
                                 }
 

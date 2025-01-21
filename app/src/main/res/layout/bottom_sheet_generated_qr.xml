@@ -35,7 +35,8 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
         android:gravity="end"
-        android:padding="8dp"
+        android:paddingHorizontal="22dp"
+        android:paddingVertical="16dp"
         android:orientation="horizontal">
 
         <Button

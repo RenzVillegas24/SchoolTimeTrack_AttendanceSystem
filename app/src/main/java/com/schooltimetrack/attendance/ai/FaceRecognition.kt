@@ -2,6 +2,8 @@ package com.schooltimetrack.attendance.ai
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.Rect
+import android.util.Log
 import com.google.android.gms.tasks.Tasks
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.face.*
@@ -45,11 +47,13 @@ class FaceRecognition(
                 )
             val cropped = cropFace(bitmap, faces[0])
 
-            val spoofResult = faceSpoofDetector.detectSpoof(bitmap, faces[0].boundingBox)
-            if (spoofResult.isSpoof)
-                return@withContext Result.failure(
-                    Throwable("Spoof detected!")
-                )
+//          Disable spoof detection for now, not accurate enough
+//            val spoofResult = faceSpoofDetector.detectSpoof(bitmap, faces[0].boundingBox)
+//            Log.d("FaceRecognition", "Spoof result: ${spoofResult.score}")
+//            if (spoofResult.isSpoof)
+//                return@withContext Result.failure(
+//                    Throwable("Spoof detected!")
+//                )
             val embedding = faceNet.getFaceEmbedding(cropped)
             Result.success(
                 Pair(cropped, embedding)

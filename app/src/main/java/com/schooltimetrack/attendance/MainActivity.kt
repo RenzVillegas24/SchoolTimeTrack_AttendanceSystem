@@ -22,6 +22,7 @@ import io.appwrite.Client
 import io.appwrite.services.Account
 import io.appwrite.services.Databases
 import io.appwrite.Query
+import io.appwrite.services.Storage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -33,6 +34,7 @@ class MainActivity : AppCompatActivity() {
     lateinit var client: Client
     lateinit var account: Account
     lateinit var databases: Databases
+    lateinit var storage: Storage
     var userDocument: UserDocument? = null
 
     private val requiredPermissions = arrayOf(
@@ -41,6 +43,14 @@ class MainActivity : AppCompatActivity() {
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Initialize Appwrite
+        client = Client(this)
+            .setEndpoint("https://cloud.appwrite.io/v1")
+            .setProject("6773c26a001612edc5fb")
+        account = Account(client)
+        databases = Databases(client)
+        storage = Storage(client)
+
         installSplashScreen().apply {
             setKeepOnScreenCondition {
                 findViewById<View>(R.id.splashScreen).visibility == View.VISIBLE
@@ -51,12 +61,6 @@ class MainActivity : AppCompatActivity() {
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
 
-        // Initialize Appwrite
-        client = Client(this)
-            .setEndpoint("https://cloud.appwrite.io/v1")
-            .setProject("6773c26a001612edc5fb")
-        account = Account(client)
-        databases = Databases(client)
 
         val navHostFragment = supportFragmentManager
             .findFragmentById(R.id.mainFragment) as NavHostFragment

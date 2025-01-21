@@ -24,6 +24,7 @@
             app:expandedTitleMarginEnd="16dp">
 
             <com.google.android.material.appbar.MaterialToolbar
+                android:id="@+id/toolbar"
                 android:layout_width="match_parent"
                 android:layout_height="?attr/actionBarSize"
                 app:layout_collapseMode="pin"
@@ -66,8 +67,7 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
                     android:clipChildren="false"
-                    android:clipToPadding="false"
-                    >
+                    android:clipToPadding="false">
                     <FrameLayout
                         android:layout_width="match_parent"
                         android:layout_height="match_parent">

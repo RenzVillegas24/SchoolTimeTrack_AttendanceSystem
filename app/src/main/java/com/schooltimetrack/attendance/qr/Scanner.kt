@@ -34,6 +34,7 @@ open class Scanner(
     private var processCameraProvider: ProcessCameraProvider? = null
     private var cameraControl: CameraControl? = null
     private var isFlashEnabled = false
+    private var cameraSelector: CameraSelector
 
     // Camera settings
     private val resolution = Size(1280, 720)
@@ -46,7 +47,21 @@ open class Scanner(
 
     private val gradientPaint = Paint()
 
+    var gradientRadius: Float = 0.6f
+        set(value) {
+            field = value
+        }
+
     init {
+        // Get saved camera preference
+        val sharedPrefs = context.getSharedPreferences("scanner_prefs", Context.MODE_PRIVATE)
+        val useFrontCamera = sharedPrefs.getBoolean("use_front_camera", false)
+        cameraSelector = if (useFrontCamera) {
+            CameraSelector.DEFAULT_FRONT_CAMERA
+        } else {
+            CameraSelector.DEFAULT_BACK_CAMERA
+        }
+
         if (context is ComponentActivity) {
             requestCameraPermission(context)
             if (hasOverlay) {
@@ -72,6 +87,8 @@ open class Scanner(
             previewView.height,
             Bitmap.Config.ARGB_8888
         )
+        previewView.setImplementationMode(PreviewView.ImplementationMode.COMPATIBLE)
+
         val canvas = Canvas(overlayBitmap)
 
         val width = canvas.width
@@ -87,7 +104,7 @@ open class Scanner(
         val gradientShader = RadialGradient(
             canvas.width * 0.5f,  // centerX
             canvas.height * 0.5f,  // centerY
-            canvas.width.coerceAtLeast(canvas.height).toFloat(),  // radius (100%p)
+            canvas.width.coerceAtLeast(canvas.height).toFloat() * gradientRadius,  // radius
             Color.TRANSPARENT,
             MaterialColors.getColor(previewView, com.google.android.material.R.attr.colorSurface),
             Shader.TileMode.CLAMP
@@ -151,7 +168,7 @@ open class Scanner(
                 .setTargetResolution(resolution)
                 .build()
                 .also {
-                    it.setSurfaceProvider(previewView.surfaceProvider)
+                    it.surfaceProvider = previewView.surfaceProvider
                 }
 
             // Image analysis use case
@@ -168,15 +185,14 @@ open class Scanner(
             try {
                 processCameraProvider?.unbindAll()
 
-                // Bind use cases to camera
+                // Use current cameraSelector instead of hardcoded back camera
                 val camera = processCameraProvider?.bindToLifecycle(
                     lifecycleOwner,
-                    CameraSelector.DEFAULT_BACK_CAMERA,
+                    cameraSelector, // Use variable instead of DEFAULT_BACK_CAMERA
                     preview,
                     imageAnalyzer
                 )
 
-                // Store camera control for flash control
                 cameraControl = camera?.cameraControl
 
             } catch (exc: Exception) {
@@ -231,5 +247,25 @@ open class Scanner(
     fun release() {
         processCameraProvider?.unbindAll()
         cameraExecutor.shutdown()
+    }
+
+    fun switchCamera() {
+        cameraSelector = if (cameraSelector == CameraSelector.DEFAULT_BACK_CAMERA) {
+            CameraSelector.DEFAULT_FRONT_CAMERA
+        } else {
+            CameraSelector.DEFAULT_BACK_CAMERA
+        }
+        
+        // Save camera preference
+        context.getSharedPreferences("scanner_prefs", Context.MODE_PRIVATE)
+            .edit()
+            .putBoolean("use_front_camera", isUsingFrontCamera())
+            .apply()
+            
+        startCamera()
+    }
+
+    fun isUsingFrontCamera(): Boolean {
+        return cameraSelector == CameraSelector.DEFAULT_FRONT_CAMERA
     }
 }

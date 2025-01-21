@@ -99,6 +99,8 @@ class FaceVerificationView @JvmOverloads constructor(
     private val DEFAULT_TRANSLATION_X = 0f
     private val DEFAULT_TRANSLATION_Y = 0f
 
+    // Add camera selector property
+    private var cameraSelector: CameraSelector
 
     init {
         // Get the overlay visibility and detection delay from attributes
@@ -115,6 +117,14 @@ class FaceVerificationView @JvmOverloads constructor(
             }
         }
 
+        // Initialize camera selector from preferences
+        val sharedPrefs = context.getSharedPreferences("face_verification_prefs", Context.MODE_PRIVATE)
+        val useFrontCamera = sharedPrefs.getBoolean("use_front_camera", true) // Default to front camera
+        cameraSelector = if (useFrontCamera) {
+            CameraSelector.DEFAULT_FRONT_CAMERA
+        } else {
+            CameraSelector.DEFAULT_BACK_CAMERA
+        }
 
         previewView = PreviewView(context)
         previewView.clipToOutline = false
@@ -216,14 +226,12 @@ class FaceVerificationView @JvmOverloads constructor(
                 it.surfaceProvider = previewView.surfaceProvider
             }
 
-            val cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
-
             try {
                 cameraProvider?.unbindAll()
                 this.findViewTreeLifecycleOwner()?.let {
                     camera = cameraProvider?.bindToLifecycle(
                         it,
-                        cameraSelector,
+                        cameraSelector, // Use variable instead of hardcoded front camera
                         preview,
                         imageCapture,
                         imageAnalyzer
@@ -654,6 +662,28 @@ class FaceVerificationView @JvmOverloads constructor(
         val byteArrayOutputStream = ByteArrayOutputStream()
         bitmap.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream)
         return Base64.encodeToString(byteArrayOutputStream.toByteArray(), Base64.DEFAULT)
+    }
+
+    // Add switch camera function
+    fun switchCamera() {
+        cameraSelector = if (cameraSelector == CameraSelector.DEFAULT_BACK_CAMERA) {
+            CameraSelector.DEFAULT_FRONT_CAMERA
+        } else {
+            CameraSelector.DEFAULT_BACK_CAMERA
+        }
+
+        // Save camera preference
+        context.getSharedPreferences("face_verification_prefs", Context.MODE_PRIVATE)
+            .edit()
+            .putBoolean("use_front_camera", isUsingFrontCamera())
+            .apply()
+
+        startCamera()
+    }
+
+    // Add front camera check function
+    fun isUsingFrontCamera(): Boolean {
+        return cameraSelector == CameraSelector.DEFAULT_FRONT_CAMERA
     }
 
 }

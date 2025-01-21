@@ -1,6 +1,6 @@
 package com.schooltimetrack.attendance.ui
 
-import WeeklyAttendanceAdapter
+import com.schooltimetrack.attendance.adapter.WeeklyAttendanceAdapter
 import android.content.Context
 import android.util.AttributeSet
 import android.util.DisplayMetrics

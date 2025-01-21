@@ -52,22 +52,21 @@
                 android:textSize="18sp"
                 android:layout_marginTop="8dp" />
 
-            <androidx.cardview.widget.CardView
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 app:cardCornerRadius="16dp"
                 android:layout_marginTop="16dp"
                 android:layout_marginHorizontal="8dp"
-                app:cardElevation="10dp">
+                app:cardElevation="20dp">
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:padding="16dp"
                     android:text="Welcome to the School Time Track Attendance System. This app uses QR codes for students to track their time in and time out. The QR code will be scanned using the camera."
-                    android:textSize="16sp"
-                    android:background="?attr/colorSurface" />
+                    android:textSize="16sp" />
 
-            </androidx.cardview.widget.CardView>
+            </com.google.android.material.card.MaterialCardView>
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnLogin"
@@ -87,6 +86,15 @@
                 style="@style/Widget.Material3.Button.IconButton.Filled"
                 app:cornerRadius="10dp"
                 android:text="Log In using QR"/>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnAutoLogin"
+                style="@style/Widget.Material3.Button.IconButton.Filled"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="3dp"
+                android:text="Auto Log In"
+                app:cornerRadius="10dp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnSignUp"

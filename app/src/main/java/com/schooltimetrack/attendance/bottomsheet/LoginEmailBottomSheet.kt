@@ -1,4 +1,4 @@
-package com.schooltimetrack.attendance.ui
+package com.schooltimetrack.attendance.bottomsheet
 
 import android.app.Dialog
 import android.graphics.Color
@@ -23,7 +23,9 @@ import io.appwrite.services.Databases
 import io.appwrite.services.Storage
 import kotlinx.coroutines.launch
 
-class LoginEmailBottomSheet : BottomSheetDialogFragment() {
+class LoginEmailBottomSheet(
+    private val onButtonLoginClick: (bottomSheet: LoginEmailBottomSheet, email: String, password: String) -> Unit
+) : BottomSheetDialogFragment() {
 
     private lateinit var client: Client
     private lateinit var account: Account
@@ -48,21 +50,14 @@ class LoginEmailBottomSheet : BottomSheetDialogFragment() {
         val etEmail = view.findViewById<TextInputEditText>(R.id.etEmail)
         val etPassword = view.findViewById<TextInputEditText>(R.id.etPassword)
         val btnLogin = view.findViewById<MaterialButton>(R.id.btnLogin)
-        val btnLoginQR = view.findViewById<MaterialButton>(R.id.btnLoginQR)
-        val btnSignUp = view.findViewById<MaterialButton>(R.id.btnSignUp)
+        val btnCancel = view.findViewById<MaterialButton>(R.id.btnCancel)
 
         btnLogin.setOnClickListener {
             handleLogin(etEmail.text.toString(), etPassword.text.toString())
         }
 
-        btnLoginQR.setOnClickListener {
+        btnCancel.setOnClickListener {
             dismiss()
-            findNavController().navigate(R.id.action_login_to_loginQR)
-        }
-
-        btnSignUp.setOnClickListener {
-            dismiss()
-            findNavController().navigate(R.id.action_login_to_signUp)
         }
 
         return view
@@ -73,20 +68,10 @@ class LoginEmailBottomSheet : BottomSheetDialogFragment() {
         dialog.setOnShowListener {
             val bottomSheet = dialog.findViewById<View>(com.google.android.material.R.id.design_bottom_sheet) as? ViewGroup
             bottomSheet?.let {
-                val displayMetrics = resources.displayMetrics
-                val height = displayMetrics.heightPixels
-                val statusBarHeight = resources.getIdentifier("status_bar_height", "dimen", "android")
-                    .let { if (it > 0) resources.getDimensionPixelSize(it) else 0 }
-
-                it.layoutParams = it.layoutParams.apply {
-                    this.height = height - statusBarHeight
-                }
-
                 BottomSheetBehavior.from(it).apply {
                     state = BottomSheetBehavior.STATE_EXPANDED
                     skipCollapsed = true
-                    isDraggable = false
-                    peekHeight = height - statusBarHeight
+                    isDraggable = true
                 }
             }
         }
@@ -103,16 +88,7 @@ class LoginEmailBottomSheet : BottomSheetDialogFragment() {
 
     private fun handleLogin(email: String, password: String) {
         if (email.isNotEmpty() && password.isNotEmpty()) {
-            viewLifecycleOwner.lifecycleScope.launch {
-                try {
-                    // Similar login logic as before
-                    // After successful login:
-                    dismiss() // Dismiss the bottom sheet
-                    // Navigate to appropriate menu
-                } catch (e: Exception) {
-                    Toast.makeText(context, "Login failed: ${e.message}", Toast.LENGTH_SHORT).show()
-                }
-            }
+            onButtonLoginClick(this, email, password)
         } else {
             Toast.makeText(context, "Please fill in all fields", Toast.LENGTH_SHORT).show()
         }

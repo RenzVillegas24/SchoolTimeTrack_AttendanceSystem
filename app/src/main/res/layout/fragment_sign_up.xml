@@ -25,10 +25,12 @@
             app:expandedTitleMarginEnd="16dp">
 
             <com.google.android.material.appbar.MaterialToolbar
+                android:id="@+id/toolbar"
                 android:layout_width="match_parent"
                 android:layout_height="?attr/actionBarSize"
                 app:layout_collapseMode="pin"
-                app:title="Sign Up"/>
+                app:title="Sign Up"
+                android:elevation="0dp" />
 
         </com.google.android.material.appbar.CollapsingToolbarLayout>
     </com.google.android.material.appbar.AppBarLayout>
@@ -478,49 +480,50 @@
 
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/tilGrade"
-                style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox"
+                style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox.ExposedDropdownMenu"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
                 app:boxCornerRadiusTopEnd="10dp"
                 app:boxCornerRadiusTopStart="10dp"
                 app:boxCornerRadiusBottomEnd="10dp"
                 app:boxCornerRadiusBottomStart="10dp"
                 app:boxStrokeWidth="0dp"
                 app:boxStrokeWidthFocused="0dp"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginEnd="8dp"
                 android:hint="Grade">
 
-                <com.google.android.material.textfield.TextInputEditText
+                <AutoCompleteTextView
                     android:id="@+id/etGrade"
                     android:layout_width="match_parent"
-                    android:paddingTop="30dp"
                     android:layout_height="65dp"
-                    android:inputType="number"
-                    android:maxLines="1"/>
+                    android:paddingTop="30dp"
+                    android:inputType="none"/>
             </com.google.android.material.textfield.TextInputLayout>
+
+            <Space
+                android:layout_width="8dp"
+                android:layout_height="match_parent"/>
 
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/tilSection"
-                style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox"
+                style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox.ExposedDropdownMenu"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
                 app:boxCornerRadiusTopEnd="10dp"
                 app:boxCornerRadiusTopStart="10dp"
                 app:boxCornerRadiusBottomEnd="10dp"
                 app:boxCornerRadiusBottomStart="10dp"
                 app:boxStrokeWidth="0dp"
                 app:boxStrokeWidthFocused="0dp"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
                 android:hint="Section">
 
-                <com.google.android.material.textfield.TextInputEditText
+                <AutoCompleteTextView
                     android:id="@+id/etSection"
                     android:layout_width="match_parent"
-                    android:paddingTop="30dp"
                     android:layout_height="65dp"
-                    android:inputType="text|textCapWords"
-                    android:maxLines="1"/>
+                    android:paddingTop="30dp"
+                    android:inputType="none"/>
             </com.google.android.material.textfield.TextInputLayout>
         </LinearLayout>
 
@@ -712,29 +715,14 @@
             app:cornerRadius="10dp"
             android:text="Sign Up"/>
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Already have an account?"
-            android:layout_margin="8dp"
-            android:layout_gravity="center_horizontal"/>
 
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnLogin"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginHorizontal="3dp"
-            app:cornerRadius="10dp"
-            style="@style/Widget.Material3.Button.IconButton.Filled.Tonal"
-            android:text="Log In using Email"/>
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnLoginQR"
+            android:id="@+id/btnCancel"
             style="@style/Widget.Material3.Button.IconButton.Filled.Tonal"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="3dp"
-            android:text="Log In using QR"
+            android:text="Cancel"
             app:cornerRadius="10dp" />
 
             <Space

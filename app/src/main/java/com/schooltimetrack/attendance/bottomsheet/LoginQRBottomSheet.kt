@@ -1,4 +1,4 @@
-package com.schooltimetrack.attendance.ui
+package com.schooltimetrack.attendance.bottomsheet
 
 import android.app.Dialog
 import android.graphics.Color
@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
+import android.view.animation.PathInterpolator
 import android.widget.Button
 import android.widget.Toast
 import androidx.camera.view.PreviewView
@@ -57,6 +58,12 @@ class LoginQRBottomSheet(
         btnCancel.setOnClickListener { dismiss() }
 
         btnSwitchCamera.setOnClickListener {
+            btnSwitchCamera.animate()
+            .rotationBy(180f)
+            .setDuration(700)
+            .setInterpolator(PathInterpolator(0.3f, 1.5f, 0.25f, 1f))
+            .start()
+        
             encryptedScanner.switchCamera()
         }
 
@@ -84,7 +91,7 @@ class LoginQRBottomSheet(
                 BottomSheetBehavior.from(it).apply {
                     state = BottomSheetBehavior.STATE_EXPANDED
                     skipCollapsed = true
-                    isDraggable = false
+                    isDraggable = true
                     peekHeight = height - statusBarHeight
                 }
             }

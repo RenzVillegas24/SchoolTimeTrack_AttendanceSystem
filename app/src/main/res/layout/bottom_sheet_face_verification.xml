@@ -4,9 +4,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    app:cornerRadius="40dp"
+    app:cornerRadius="?attr/dialogCornerRadius"
     app:roundedCorners="topLeft|topRight"
-    android:background="?attr/colorSurface"
     android:clipChildren="true">
 
     <com.schooltimetrack.attendance.ui.FaceVerificationView
@@ -50,7 +49,8 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
         android:gravity="end"
-        android:padding="8dp"
+        android:paddingHorizontal="22dp"
+        android:paddingVertical="16dp"
         android:orientation="horizontal">
 
         <com.google.android.material.button.MaterialButton

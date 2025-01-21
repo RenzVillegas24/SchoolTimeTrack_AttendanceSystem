@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.LinearSnapHelper
 import com.google.android.material.button.MaterialButton
 import com.schooltimetrack.attendance.R
 import com.google.mlkit.vision.face.Face
+import com.schooltimetrack.attendance.adapter.PersonSelectionAdapter
 
 class PersonSelectionView @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
@@ -43,6 +44,9 @@ class PersonSelectionView @JvmOverloads constructor(
         setSkeletonFaces()
         btnPrevious.isEnabled = false
         btnNext.isEnabled = false
+
+        alpha = 0f
+
     }
 
     private fun setupRecyclerView() {
@@ -173,7 +177,9 @@ class PersonSelectionView @JvmOverloads constructor(
         btnPrevious.isEnabled = true
         btnNext.isEnabled = true
 
+
         rvFaces.doOnLayout {
+            animate().alpha(1f).setDuration(300).start()
             centerFirstItem()
             updateItemsTransformation()
         }

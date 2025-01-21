@@ -3,11 +3,11 @@ package com.schooltimetrack.attendance.layout
 import android.app.Activity
 import android.content.Intent
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.graphics.drawable.BitmapDrawable
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.text.InputType
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -20,24 +20,23 @@ import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.appbar.AppBarLayout
-import com.google.android.material.appbar.CollapsingToolbarLayout
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.textfield.TextInputLayout
 import com.google.android.material.textview.MaterialTextView
 import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.transition.MaterialSharedAxis
+import com.google.android.material.color.MaterialColors
 import com.ml.shubham0204.facenet_android.domain.embeddings.FaceNet
 import com.ml.shubham0204.facenet_android.domain.face_detection.FaceSpoofDetector
+import com.schooltimetrack.attendance.MainActivity
 import com.schooltimetrack.attendance.R
 import com.schooltimetrack.attendance.address.*
 import com.schooltimetrack.attendance.ai.FaceRecognition
-import com.schooltimetrack.attendance.model.StudentInfo
-import com.schooltimetrack.attendance.model.TeacherInfo
-import com.schooltimetrack.attendance.qr.EncryptedGenerator
-import com.schooltimetrack.attendance.ui.FaceVerificationBottomSheet
-import com.schooltimetrack.attendance.ui.GeneratedQRBottomSheet
-import com.schooltimetrack.attendance.ui.ImageCropBottomSheet
+import com.schooltimetrack.attendance.bottomsheet.FaceVerificationBottomSheet
+import com.schooltimetrack.attendance.bottomsheet.GeneratedQRBottomSheet
+import com.schooltimetrack.attendance.bottomsheet.ImageCropBottomSheet
 import com.schooltimetrack.attendance.ui.SegmentedControl
+import com.schooltimetrack.attendance.utils.LoadingDialog
 import io.appwrite.Client
 import io.appwrite.services.Account
 import io.appwrite.services.Storage
@@ -47,18 +46,14 @@ import io.appwrite.models.InputFile
 import io.appwrite.services.Databases
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
-import java.io.InputStream
 import java.util.Calendar
 import kotlin.math.floor
 import java.time.LocalDate
 import java.time.Period
 import java.time.format.DateTimeFormatter
-import java.util.Locale
-import kotlin.math.log
 
 class SignUp : Fragment() {
 
@@ -75,17 +70,24 @@ class SignUp : Fragment() {
     private var selectedBrgy: Barangay? = null
     private var selectedImageUri: Uri? = null
     private val PICK_IMAGE_REQUEST = 1
+    private lateinit var etGrade: AutoCompleteTextView
+    private lateinit var etSection: AutoCompleteTextView
+
+    private var gradesList = mutableListOf<String>()
+    private var sectionsList = mutableMapOf<String, List<String>>()
+
+    private lateinit var loadingDialog: LoadingDialog
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         // Initialize Appwrite
-        client = Client(requireContext())
-            .setEndpoint("https://cloud.appwrite.io/v1")
-            .setProject("6773c26a001612edc5fb")
-        account = Account(client)
-        storage = Storage(client)
-        databases = Databases(client)
+        client = (activity as MainActivity).client
+        account = (activity as MainActivity).account
+        storage = (activity as MainActivity).storage
+        databases = (activity as MainActivity).databases
         addressManager = AddressManager(requireContext())
+
+        loadingDialog = LoadingDialog(requireContext())
     }
 
     @RequiresApi(Build.VERSION_CODES.S)
@@ -102,10 +104,10 @@ class SignUp : Fragment() {
         val etLastName = view.findViewById<EditText>(R.id.etLastName)
         val etSuffixName = view.findViewById<EditText>(R.id.etSuffixName)
         val tilGrade = view.findViewById<TextInputLayout>(R.id.tilGrade)
-        val etGrade = view.findViewById<EditText>(R.id.etGrade)
+        etGrade = view.findViewById(R.id.etGrade)
         val tilSubject = view.findViewById<TextInputLayout>(R.id.tilSubject)
         val etSubject = view.findViewById<EditText>(R.id.etSubject)
-        val etSection = view.findViewById<EditText>(R.id.etSection)
+        etSection = view.findViewById(R.id.etSection)
         val etAge = view.findViewById<EditText>(R.id.etAge)
         val etRegion = view.findViewById<AutoCompleteTextView>(R.id.etRegion)
         val etProvince = view.findViewById<AutoCompleteTextView>(R.id.etProvince)
@@ -121,8 +123,7 @@ class SignUp : Fragment() {
         val etGender = view.findViewById<AutoCompleteTextView>(R.id.etGender)
         val cbAgreeTerms = view.findViewById<CheckBox>(R.id.cbAgreeTerms)
         val btnSignUp = view.findViewById<Button>(R.id.btnSignUp)
-        val btnLogin = view.findViewById<Button>(R.id.btnLogin)
-        val btnLoginQR = view.findViewById<Button>(R.id.btnLoginQR)
+        val btnCancel = view.findViewById<Button>(R.id.btnCancel)
         ivProfileImage = view.findViewById(R.id.ivProfileImage)
         val btnUploadImage = view.findViewById<Button>(R.id.btnUploadImage)
         val btnRemoveImage = view.findViewById<Button>(R.id.btnRemoveImage)
@@ -136,6 +137,13 @@ class SignUp : Fragment() {
             ablToolbar.setPadding(0, statusBar.top, 0, 0)
             sBottom.layoutParams.height = navBar.bottom
             insets
+        }
+
+        val toolbar = view.findViewById<MaterialToolbar>(R.id.toolbar)
+        toolbar.setNavigationIcon(R.drawable.ic_chevron_left_24_filled)
+        toolbar.setNavigationIconTint(MaterialColors.getColor(requireContext(), com.google.android.material.R.attr.colorOnSurface, "colorOnSurface"))
+        toolbar.setNavigationOnClickListener {
+            findNavController().popBackStack()
         }
 
 
@@ -213,9 +221,60 @@ class SignUp : Fragment() {
         btnUploadImage.background.alpha = 170
         btnRemoveImage.background.alpha = 170
 
+        fun onSegmentSelected(index: Int) {
+            val isTeacher = index == 1
+            tilSubject.visibility = if (isTeacher) View.VISIBLE else View.GONE
+
+            //clear the grade and section
+            etGrade.text.clear()
+            etSection.text.clear()
+
+            // Toggle between EditText and AutoCompleteTextView for grade/section
+            if (isTeacher) {
+                // Show EditText for teachers
+                tilGrade.editText?.apply {
+                    inputType = InputType.TYPE_CLASS_NUMBER
+                    isEnabled = true
+                }
+                etSection.apply {
+                    inputType = InputType.TYPE_CLASS_TEXT
+                    isEnabled = true
+                }
+
+
+                // Clear adapters
+                (etGrade as? AutoCompleteTextView)?.setAdapter(null)
+                (etSection as? AutoCompleteTextView)?.setAdapter(null)
+            } else {
+                // Show dropdowns for students
+                loadGradeAndSectionData()
+
+                // Convert EditText to AutoCompleteTextView for grade
+                (etGrade as? AutoCompleteTextView)?.apply {
+                    inputType = InputType.TYPE_NULL
+                    isEnabled = true
+                    setAdapter(ArrayAdapter(requireContext(),
+                        android.R.layout.simple_dropdown_item_1line,
+                        gradesList))
+
+                    setOnItemClickListener { _, _, position, _ ->
+                        val selectedGrade = gradesList[position]
+                        updateSectionDropdown(selectedGrade)
+                    }
+                }
+
+                // Convert EditText to AutoCompleteTextView for section
+                (etSection as? AutoCompleteTextView)?.apply {
+                    inputType = InputType.TYPE_NULL
+                    isEnabled = false  // Enable after grade is selected
+                }
+            }
+        }
+
+
         segAccountType.setOnSegmentSelectedListener(object : SegmentedControl.OnSegmentSelectedListener {
             override fun onSegmentSelected(index: Int) {
-                tilSubject.visibility = if (index == 1) View.VISIBLE else View.GONE
+                onSegmentSelected(index)
             }
         })
 
@@ -275,6 +334,8 @@ class SignUp : Fragment() {
             val birthday = etBirthday.text.toString().trim()
             val gender = etGender.text.toString().trim()
 
+            loadingDialog.show("Loading face data...")
+
             viewLifecycleOwner.lifecycleScope.launch {
                 val userDocDeferred = async {
                     databases.listDocuments(
@@ -283,16 +344,29 @@ class SignUp : Fragment() {
                         queries = listOf(
                             Query.equal("grade", grade),
                             Query.equal("section", section),
-                            Query.equal("subject", subject)
+//                            Query.equal("subject", subject)
                         )
                     ).documents.firstOrNull()
                 }
                 val userDoc = userDocDeferred.await()
 
-                if (userDoc != null) {
-                    withContext(Dispatchers.Main) {
-                        Toast.makeText(context, "Combination of grade, section, and subject already exists", Toast.LENGTH_SHORT).show()
+                if (userType == "student") {
+                    if (userDoc == null) {
+                        withContext(Dispatchers.Main) {
+                            Toast.makeText(context, "Combination of grade and section does not exist", Toast.LENGTH_SHORT).show()
+                        }
                     }
+                    loadingDialog.hide()
+                    return@launch
+                } else if (userType == "teacher") {
+                    if (userDoc != null) {
+                        withContext(Dispatchers.Main) {
+//                        Toast.makeText(context, "Combination of grade, section, and subject already exists", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "Combination of grade and section already exists", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                    loadingDialog.hide()
+                    return@launch
                 }
 
                 if (firstName.isNotEmpty() && lastName.isNotEmpty() && grade.isNotEmpty() &&
@@ -313,6 +387,7 @@ class SignUp : Fragment() {
                             Toast.makeText(context, "Face verification successful", Toast.LENGTH_SHORT).show()
                             bottomSheet.dismiss()
 
+                            loadingDialog.show("Creating user account...")
                             // On verification success
                             viewLifecycleOwner.lifecycleScope.launch {
                                 try {
@@ -324,7 +399,6 @@ class SignUp : Fragment() {
                                         name = "$firstName $lastName"
                                     )
 
-                                    // create user new schedule if teacher
                                     databases.createDocument(
                                         databaseId = "6774d5c500013f347412",
                                         collectionId = "6785debf002943b87bb1",
@@ -393,6 +467,8 @@ class SignUp : Fragment() {
                                         data = data
                                     )
 
+                                    loadingDialog.hide()
+
                                     withContext(Dispatchers.Main) {
                                         Toast.makeText(context, "Sign Up Successful", Toast.LENGTH_SHORT).show()
                                         findNavController().navigate(R.id.action_signUp_to_login)
@@ -433,20 +509,17 @@ class SignUp : Fragment() {
                 } else {
                     Toast.makeText(context, "Please fill in all fields", Toast.LENGTH_SHORT).show()
                 }
+                loadingDialog.hide()
 
             }
-
-
-
         }
 
-        btnLogin.setOnClickListener {
-            findNavController().navigate(R.id.action_signUp_to_login)
+        btnCancel.setOnClickListener {
+            findNavController().popBackStack()
         }
 
-        btnLoginQR.setOnClickListener {
-            findNavController().navigate(R.id.action_signUp_to_loginQR)
-        }
+
+        onSegmentSelected(segAccountType.getSelectedIndex())
 
         return view
     }
@@ -474,7 +547,8 @@ class SignUp : Fragment() {
                         }
                     }
                 },
-                {}, requirePerson = true, centerCropY = -200f)
+                {},
+                requirePerson = true, centerCropY = -200f)
         }?.show(parentFragmentManager, "ImageCropBottomSheet")
     }
 
@@ -491,5 +565,65 @@ class SignUp : Fragment() {
     override fun onDestroy() {
         super.onDestroy()
         addressManager.close()
+    }
+
+    private fun loadGradeAndSectionData() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                val teacherDocs = databases.listDocuments(
+                    databaseId = "6774d5c500013f347412",
+                    collectionId = "6785debf002943b87bb1",
+                    queries = listOf(
+                        Query.equal("type", "schedule")  // Get teacher records
+                    )
+                ).documents
+
+                // Clear existing data
+                gradesList.clear()
+                sectionsList.clear()
+
+                // Process teacher records
+                teacherDocs.forEach { doc ->
+                    val grade = doc.data["grade"].toString()
+                    val section = doc.data["section"].toString()
+
+                    if (!gradesList.contains(grade)) {
+                        gradesList.add(grade)
+                    }
+
+                    sectionsList[grade] = sectionsList.getOrDefault(grade, listOf()) + section
+                }
+
+                // Sort grades numerically
+                gradesList.sortBy { it.toIntOrNull() ?: 0 }
+
+                // Update UI
+                withContext(Dispatchers.Main) {
+                    (etGrade as? AutoCompleteTextView)?.setAdapter(
+                        ArrayAdapter(requireContext(),
+                            android.R.layout.simple_dropdown_item_1line,
+                            gradesList)
+                    )
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(context,
+                        "Failed to load grade/section data: ${e.message}",
+                        Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    private fun updateSectionDropdown(selectedGrade: String) {
+        val sections = sectionsList[selectedGrade] ?: listOf()
+
+        (etSection as? AutoCompleteTextView)?.apply {
+            setAdapter(ArrayAdapter(requireContext(),
+                android.R.layout.simple_dropdown_item_1line,
+                sections))
+            isEnabled = true
+            text.clear()
+        }
     }
 }

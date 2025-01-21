@@ -1,11 +1,9 @@
-package com.schooltimetrack.attendance.ui
+package com.schooltimetrack.attendance.bottomsheet
 
 import android.app.Dialog
-import android.content.res.ColorStateList
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
-import android.graphics.PorterDuff
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -15,8 +13,9 @@ import android.widget.Button
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
-import com.google.android.material.color.MaterialColors
 import com.schooltimetrack.attendance.R
+import com.schooltimetrack.attendance.ui.ImageCropView
+import com.schooltimetrack.attendance.ui.PersonSelectionView
 import java.io.InputStream
 
 class ImageCropBottomSheet : BottomSheetDialogFragment {

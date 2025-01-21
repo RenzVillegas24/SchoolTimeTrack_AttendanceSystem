@@ -1,4 +1,4 @@
-package com.schooltimetrack.attendance.ui
+package com.schooltimetrack.attendance.bottomsheet
 
 import android.app.Dialog
 import android.graphics.Bitmap

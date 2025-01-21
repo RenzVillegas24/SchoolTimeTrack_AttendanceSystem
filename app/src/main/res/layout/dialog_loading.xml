@@ -2,20 +2,26 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
+    android:background="@drawable/bg_loading_dialog"
+    android:minWidth="200dp"
+    android:minHeight="200dp"
     android:orientation="vertical"
-    android:padding="16dp"
-    android:gravity="center">
+    android:gravity="center"
+    android:padding="24dp">
 
     <ProgressBar
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:indeterminate="true" />
+        android:id="@+id/progressBar"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:indeterminateTint="?attr/colorPrimary"/>
 
     <TextView
+        android:id="@+id/tvMessage"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="Loading..."
-        android:textSize="16sp" />
+        android:layout_marginTop="16dp"
+        android:textSize="16sp"
+        android:textColor="@color/black"
+        android:gravity="center"/>
 
 </LinearLayout>

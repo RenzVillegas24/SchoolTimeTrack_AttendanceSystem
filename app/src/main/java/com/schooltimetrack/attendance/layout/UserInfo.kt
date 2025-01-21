@@ -2,23 +2,18 @@ package com.schooltimetrack.attendance.layout
 
 import UserDocument
 import android.graphics.BitmapFactory
-import android.icu.text.DateFormat
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ArrayAdapter
-import android.widget.AutoCompleteTextView
 import android.widget.EditText
 import androidx.fragment.app.Fragment
 import com.schooltimetrack.attendance.R
 import kotlinx.coroutines.launch
 import androidx.lifecycle.lifecycleScope
 import android.widget.ImageView
-import android.widget.LinearLayout
 import android.widget.Space
 import android.widget.TextView
 import androidx.annotation.RequiresApi
@@ -33,19 +28,13 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.TextInputLayout
 import com.google.android.material.transition.MaterialSharedAxis
 import com.schooltimetrack.attendance.MainActivity
-import com.schooltimetrack.attendance.address.AddressManager
-import com.schooltimetrack.attendance.address.Barangay
-import com.schooltimetrack.attendance.address.CityMun
-import com.schooltimetrack.attendance.address.Province
-import com.schooltimetrack.attendance.address.Region
-import com.schooltimetrack.attendance.ui.GeneratedQRBottomSheet
-import com.schooltimetrack.attendance.ui.SegmentedControl
+import com.schooltimetrack.attendance.bottomsheet.GeneratedQRBottomSheet
+import com.schooltimetrack.attendance.utils.LoadingDialog
 import io.appwrite.Client
 import io.appwrite.Query
 import io.appwrite.services.Account
 import io.appwrite.services.Databases
 import io.appwrite.services.Storage
-import kotlinx.coroutines.async
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
@@ -58,7 +47,7 @@ class UserInfo : Fragment() {
     private lateinit var databases: Databases
     private lateinit var toolbar: MaterialToolbar
 
-
+    private lateinit var loadingDialog: LoadingDialog
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -68,9 +57,11 @@ class UserInfo : Fragment() {
             userDocument = it.getParcelable("UserDocument")
         }
         client = (activity as MainActivity).client
-        storage = Storage(client)
+        storage = (activity as MainActivity).storage
         account = (activity as MainActivity).account
         databases = (activity as MainActivity).databases
+
+        loadingDialog = LoadingDialog(requireContext())
     }
 
     @RequiresApi(Build.VERSION_CODES.S)
@@ -239,7 +230,9 @@ class UserInfo : Fragment() {
                     setTitle("Logout")
                     setMessage("Are you sure you want to logout?")
                     setPositiveButton("Yes") { _, _ ->
+                        loadingDialog.show("Logging out...")
                         lifecycleScope.launch {
+                            val userTypeTmp = user.userType
                             try {
                                 account.deleteSessions()
                                 (activity as MainActivity).userDocument = null
@@ -247,14 +240,21 @@ class UserInfo : Fragment() {
                                 e.printStackTrace()
                             } finally {
                                 // show confirmation dialog
+                                loadingDialog.hide()
                                 MaterialAlertDialogBuilder(requireContext()).apply {
                                     setTitle("Logout")
                                     setMessage("You have been logged out.")
                                     setPositiveButton("OK") { dialog, _ ->
                                         dialog.dismiss()
-                                        navController.popBackStack(R.id.welcome, true)
-                                        navController.navigate(R.id.welcome)
+                                        navController.navigate(
+                                            R.id.action_userInfo_to_welcome,
+                                            Bundle().apply { putParcelable("UserDocument", userDocument) },
+                                            androidx.navigation.NavOptions.Builder()
+                                                .setPopUpTo(if (userTypeTmp == "student") R.id.studentMenu else R.id.teacherMenu, true)
+                                                .build()
+                                        )
                                     }
+                                    setCancelable(false)
                                     show()
                                 }
                             }

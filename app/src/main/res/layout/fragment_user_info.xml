@@ -456,7 +456,8 @@
                         android:layout_width="match_parent"
                         android:paddingTop="30dp"
                         android:layout_height="65dp"
-                        android:inputType="number"
+                        android:editable="false"
+                        android:inputType="none"
                         android:maxLines="1"/>
                 </com.google.android.material.textfield.TextInputLayout>
 
@@ -478,8 +479,9 @@
                         android:id="@+id/etSection"
                         android:layout_width="match_parent"
                         android:paddingTop="30dp"
+                        android:inputType="none"
+                        android:editable="false"
                         android:layout_height="65dp"
-                        android:inputType="text|textCapWords"
                         android:maxLines="1"/>
                 </com.google.android.material.textfield.TextInputLayout>
             </LinearLayout>

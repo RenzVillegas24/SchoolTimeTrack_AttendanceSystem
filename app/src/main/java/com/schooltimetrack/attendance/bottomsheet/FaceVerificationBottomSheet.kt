@@ -1,42 +1,25 @@
-package com.schooltimetrack.attendance.ui
+package com.schooltimetrack.attendance.bottomsheet
 
 import android.animation.Keyframe
 import android.animation.ObjectAnimator
 import android.animation.PropertyValuesHolder
 import android.app.Dialog
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.graphics.Color
-import android.net.Uri
 import android.os.Bundle
-import android.provider.MediaStore
-import android.util.Base64
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.ImageView
-import android.widget.ProgressBar
-import android.widget.Toast
-import androidx.lifecycle.lifecycleScope
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.card.MaterialCardView
-import com.google.android.material.color.MaterialColors
-import com.google.android.material.textview.MaterialTextView
-import com.ml.shubham0204.facenet_android.domain.embeddings.FaceNet
-import com.ml.shubham0204.facenet_android.domain.face_detection.FaceSpoofDetector
 import com.schooltimetrack.attendance.R
-import com.schooltimetrack.attendance.ai.FaceRecognition
-import kotlinx.coroutines.launch
-import okhttp3.*
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import org.json.JSONObject
-import java.io.ByteArrayOutputStream
-import java.io.IOException
+import com.schooltimetrack.attendance.ui.FaceVerificationView
 
 class FaceVerificationBottomSheet(
     private val profileImage: Any,

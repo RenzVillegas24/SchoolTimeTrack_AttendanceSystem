@@ -1,22 +1,15 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
     <style name="Base.Theme.SchoolTimeTrackAttendanceSystem" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
         <item name="android:windowTranslucentStatus">true</item>
         <item name="android:fontFamily">@font/font</item>
         <item name="fontFamily">@font/font</item>
+        <item name="dialogCornerRadius">24dp</item>
     </style>
 
 
     <style name="Theme.App.SplashScreen" parent="Theme.SplashScreen">
-        <!-- Set the splash screen background, animated icon, and animation duration. -->
         <item name="windowSplashScreenBackground">@android:color/transparent</item>
-
         <item name="windowSplashScreenAnimationDuration">50</item>
-
-        <!-- Set the theme of the Activity that directly follows your splash screen. -->
-        <!-- Required -->
         <item name="postSplashScreenTheme">@style/Theme.SchoolTimeTrackAttendanceSystem</item>
     </style>
 

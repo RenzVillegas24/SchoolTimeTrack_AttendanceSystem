@@ -128,8 +128,6 @@ class ImageCropView @JvmOverloads constructor(
             val faceHeightWithPadding = faceBounds.height() + padding
 
             var targetScaleFactor: Float
-            val targetPosX: Float
-            val targetPosY: Float
 
             // Scale the image to fit the face within the cropRect
             val scaleX = cropRect.width() / faceWidthWithPadding
@@ -140,8 +138,8 @@ class ImageCropView @JvmOverloads constructor(
             val minScaleFactor = Math.max(cropRect.width() / it.width, cropRect.height() / it.height)
             targetScaleFactor = Math.max(minScaleFactor, targetScaleFactor)
 
-            targetPosX = cropRect.left - (faceBounds.left - padding / 2) * targetScaleFactor
-            targetPosY = cropRect.top - (faceBounds.top - padding / 3) * targetScaleFactor
+            val targetPosX: Float = cropRect.left - (faceBounds.left - padding / 2) * targetScaleFactor
+            val targetPosY: Float = cropRect.top - (faceBounds.top - padding / 3) * targetScaleFactor
 
             val animator = ValueAnimator.ofFloat(0f, 1f).apply {
                 duration = 750 // Animation duration in milliseconds

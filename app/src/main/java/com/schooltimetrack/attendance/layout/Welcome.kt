@@ -1,9 +1,8 @@
 package com.schooltimetrack.attendance.layout
 
+import UserDocument
 import android.app.Activity
 import android.content.Intent
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -18,25 +17,43 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.appbar.AppBarLayout
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.transition.MaterialSharedAxis
-import com.ml.shubham0204.facenet_android.domain.embeddings.FaceNet
-import com.ml.shubham0204.facenet_android.domain.face_detection.FaceSpoofDetector
+import com.schooltimetrack.attendance.MainActivity
 import com.schooltimetrack.attendance.R
-import com.schooltimetrack.attendance.ai.FaceRecognition
-import com.schooltimetrack.attendance.ui.FaceVerificationBottomSheet
-import com.schooltimetrack.attendance.ui.GeneratedQRBottomSheet
-import com.schooltimetrack.attendance.ui.ImageCropBottomSheet
-import io.appwrite.ID
-import io.appwrite.models.InputFile
+import com.schooltimetrack.attendance.bottomsheet.FaceVerificationBottomSheet
+import com.schooltimetrack.attendance.bottomsheet.ImageCropBottomSheet
+import com.schooltimetrack.attendance.bottomsheet.LoginEmailBottomSheet
+import com.schooltimetrack.attendance.bottomsheet.LoginQRBottomSheet
+import com.schooltimetrack.attendance.utils.LoadingDialog
+import io.appwrite.Client
+import io.appwrite.Query
+import io.appwrite.services.Account
+import io.appwrite.services.Databases
+import io.appwrite.services.Storage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.util.Locale
 
 class Welcome : Fragment() {
+
+    private lateinit var client: Client
+    private lateinit var account: Account
+    private lateinit var storage: Storage
+    private lateinit var databases: Databases
+
+    private lateinit var loadingDialog: LoadingDialog
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        client = (activity as MainActivity).client
+        account = (activity as MainActivity).account
+        storage = (activity as MainActivity).storage
+        databases = (activity as MainActivity).databases
+
+        loadingDialog = LoadingDialog(requireContext())
     }
 
     override fun onCreateView(
@@ -48,6 +65,7 @@ class Welcome : Fragment() {
         val btnLogin = view.findViewById<Button>(R.id.btnLogin)
         val btnLoginQR = view.findViewById<Button>(R.id.btnLoginQR)
         val btnSignUp = view.findViewById<Button>(R.id.btnSignUp)
+        val btnAutoLogin = view.findViewById<Button>(R.id.btnAutoLogin)
 
 
         val ablToolbar = view.findViewById<AppBarLayout>(R.id.ablToolbar)
@@ -67,10 +85,71 @@ class Welcome : Fragment() {
         returnTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ false)
 
         btnLogin.setOnClickListener {
-            findNavController().navigate(R.id.action_welcome_to_login)
+//            findNavController().navigate(R.id.action_welcome_to_login)
+            LoginEmailBottomSheet { bottomSheet, email, password ->
+                login(email, password) {
+                    bottomSheet.dismiss()
+                }
+            }.show(parentFragmentManager, "LoginEmailBottomSheet")
         }
 
         btnLoginQR.setOnClickListener {
+            LoginQRBottomSheet(
+                onDecryptedDataReceived = { jsonData, encryptedScanner, bottomSheet ->
+                    Log.d("LoginQR", "Decrypted data: $jsonData")
+
+                    // Handle the decrypted JSON data
+                    val userType = jsonData.getString("userType")
+                    val name = jsonData.getJSONArray("name")
+                    val grade = jsonData.getString("grade")
+                    val section = jsonData.getString("section")
+                    val age = jsonData.getString("age")
+                    val address = jsonData.getJSONArray("address")
+                    val addressId = jsonData.getString("addressId")
+                    val email = jsonData.getString("email")
+                    val birthday = jsonData.getString("birthday")
+                    val gender = jsonData.getString("gender")
+                    val contactNumber = jsonData.getString("contactNumber")
+                    val password = jsonData.getString("password")
+                    //                val embedding = jsonData.getJSONArray("embedding")
+
+                    val addressString = address.join(", ").replace("\"", "")
+                    val nameString = name.join(" ").replace("\"", "")
+                    encryptedScanner.pauseScanning()
+
+                    // Show material dialog with the user data
+                    MaterialAlertDialogBuilder(view.context)
+                        .setTitle("Confirm Login")
+                        .setMessage(
+                """
+                User Type: ${userType.uppercase(Locale.ROOT)}
+                User Name: $nameString
+                Email: $email
+                Address: $addressString
+                Grade: $grade
+                Section: $section
+                """.trimIndent())
+                        .setPositiveButton("Login") { dialog, _ ->
+                            dialog.dismiss()
+
+                            login(email, password) {
+                                bottomSheet.dismiss()
+                            }
+
+                            encryptedScanner.resumeScanning()
+                        }
+                        .setNegativeButton("Cancel") { dialog, _ ->
+                            dialog.dismiss()
+                            encryptedScanner.resumeScanning()
+                        }
+                        .setOnDismissListener { encryptedScanner.resumeScanning() }
+                        .show()
+                }
+            ).show(parentFragmentManager, "LoginQRBottomSheet")
+        }
+
+
+        btnAutoLogin.setOnClickListener {
             findNavController().navigate(R.id.action_welcome_to_loginQR)
         }
 
@@ -107,6 +186,136 @@ class Welcome : Fragment() {
         return view
     }
 
+    private fun login(email: String, password: String, onLoginSuccess: () -> Unit) {
+        loadingDialog.show("Loading face data...")
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                // find the email in database
+                val emailQuery = databases.listDocuments(
+                    databaseId = "6774d5c500013f347412",
+                    collectionId = "677f45d0003a18299bdc",
+                    queries = listOf(Query.equal("email", email))
+                )
+
+                emailQuery.documents.firstOrNull()?.let { doc ->
+
+                    val userDocument = UserDocument(
+                        userId = doc.id,
+                        userType = doc.data["userType"].toString(),
+                        name = (doc.data["name"] as ArrayList<String>),
+                        grade = doc.data["grade"].toString(),
+                        subject = doc.data["subject"].toString(),
+                        section = doc.data["section"].toString(),
+                        age = doc.data["age"].toString().toInt(),
+                        address = doc.data["address"] as ArrayList<String>,
+                        addressId = doc.data["addressId"].toString(),
+                        birthday = doc.data["birthday"].toString(),
+                        gender = doc.data["gender"].toString(),
+                        profileImageId = doc.data["profileImageId"].toString(),
+                        email = doc.data["email"].toString(),
+                        contactNumber = doc.data["contactNumber"] as ArrayList<String>
+                    )
+
+                    val name = doc.data["name"]
+                    val docId = doc.id
+                    val embedding = (doc.data["embedding"] as ArrayList<Double>).map { it.toFloat() }.toFloatArray()
+
+                    loadingDialog.hide()
+
+                    FaceVerificationBottomSheet(Triple(embedding, docId, name)) { bottomSheet, results ->
+                        Toast.makeText(context, "Face verified", Toast.LENGTH_SHORT).show()
+                        viewLifecycleOwner.lifecycleScope.launch {
+                            try {
+                                loadingDialog.show("Logging in...")
+
+                                // check if the user is already logged in, then log out
+                                if (checkExistingSession()) {
+                                    account.deleteSessions()
+                                }
+
+                                // Create an email session
+                                val session = account.createEmailPasswordSession(
+                                    email = email,
+                                    password = password
+                                )
+
+                                // Get account details to verify login
+                                val user = account.get()
+
+                                // Store the user document in the MainActivity
+                                (activity as MainActivity).userDocument = userDocument
+
+                                // Call the onLoginSuccess callback
+                                onLoginSuccess()
+
+                                // Navigate to the appropriate menu
+                                when (emailQuery.documents[0].data["userType"]?.toString()
+                                ) {"student" -> findNavController().navigate(R.id.action_welcome_to_studentMenu,
+                                    Bundle().apply {
+                                        putParcelable("UserDocument", userDocument)
+                                    })
+                                    "teacher" ->  findNavController().navigate(R.id.action_welcome_to_teacherMenu,
+                                        Bundle().apply {
+                                            putParcelable("UserDocument", userDocument)
+                                        })
+                                }
+
+                                withContext(Dispatchers.Main) {
+                                    Toast.makeText(
+                                        context,
+                                        "Authentication Successful: ${user.name}",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                            } catch (e: Exception) {
+                                withContext(Dispatchers.Main) {
+                                    Toast.makeText(
+                                        context,
+                                        "Authentication Failed: ${e.message}",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+
+                            }
+                            loadingDialog.hide()
+
+                        }
+
+                        bottomSheet.dismiss()
+                    }.show(childFragmentManager, "FaceVerificationBottomSheet")
+
+                } ?: run {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(
+                            context,
+                            "No user found with this email",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
+
+
+            } catch (e: Exception) {
+                Toast.makeText(
+                    context,
+                    "Authentication Failed: ${e.message}",
+                    Toast.LENGTH_SHORT
+                )
+                    .show()
+            }
+        }
+    }
+
+    // Optional: Check if user is already logged in
+    private suspend fun checkExistingSession(): Boolean {
+        return try {
+            account.get()
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
 
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {

@@ -1,4 +1,4 @@
-package com.schooltimetrack.attendance.layout
+package com.schooltimetrack.attendance.bottomsheet
 
 import AttendanceDay
 import android.os.Bundle
@@ -7,7 +7,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
-import android.widget.TextView
 import android.widget.TimePicker
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.schooltimetrack.attendance.R
@@ -15,7 +14,6 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 
 class TimeSettingsBottomSheet : BottomSheetDialogFragment() {
     private var timeSettingsListener: TimeSettingsListener? = null

@@ -1,7 +1,6 @@
 package com.schooltimetrack.attendance.layout
 
 import UserDocument
-import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -16,9 +15,9 @@ import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.appbar.AppBarLayout
+import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.transition.MaterialSharedAxis
-import com.ml.shubham0204.facenet_android.domain.embeddings.FaceNet
-import com.ml.shubham0204.facenet_android.domain.face_detection.FaceSpoofDetector
+import com.google.android.material.color.MaterialColors
 import com.schooltimetrack.attendance.MainActivity
 import io.appwrite.Client
 import io.appwrite.services.Account
@@ -26,8 +25,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import com.schooltimetrack.attendance.R
-import com.schooltimetrack.attendance.ai.FaceRecognition
-import com.schooltimetrack.attendance.ui.FaceVerificationBottomSheet
+import com.schooltimetrack.attendance.bottomsheet.FaceVerificationBottomSheet
 import io.appwrite.Query
 import io.appwrite.services.Databases
 import io.appwrite.services.Storage
@@ -42,12 +40,10 @@ class Login : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         // Initialize Appwrite
-        client = Client(requireContext())
-            .setEndpoint("https://cloud.appwrite.io/v1")
-            .setProject("6773c26a001612edc5fb")
-        account = Account(client)
-        databases = Databases(client)
-        storage = Storage(client)
+        client = (activity as MainActivity).client
+        account = (activity as MainActivity).account
+        storage = (activity as MainActivity).storage
+        databases = (activity as MainActivity).databases
     }
 
     override fun onCreateView(
@@ -73,6 +69,14 @@ class Login : Fragment() {
             insets
         }
 
+
+        val toolbar = view.findViewById<MaterialToolbar>(R.id.toolbar)
+        toolbar.setNavigationIcon(R.drawable.ic_chevron_left_24_filled)
+        toolbar.setNavigationIconTint(MaterialColors.getColor(requireContext(), com.google.android.material.R.attr.colorOnSurface, "colorOnSurface"))
+        toolbar.setNavigationOnClickListener {
+            findNavController().popBackStack()
+        }
+
         exitTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ true)
         enterTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ true)
         reenterTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ false)
@@ -95,8 +99,6 @@ class Login : Fragment() {
                         )
 
                         emailQuery.documents.firstOrNull()?.let { doc ->
-
-
                             val userDocument = UserDocument(
                                 userId = doc.id,
                                 userType = doc.data["userType"].toString(),
@@ -152,24 +154,6 @@ class Login : Fragment() {
 
                                         // Get account details to verify login
                                         val user = account.get()
-
-                                        val userDocument = UserDocument(
-                                            userId = docId,
-                                            userType = doc.data["userType"].toString(),
-                                            name = (doc.data["name"] as ArrayList<String>),
-                                            grade = doc.data["grade"].toString(),
-                                            subject = doc.data["subject"].toString(),
-                                            section = doc.data["section"].toString(),
-                                            age = doc.data["age"].toString().toInt(),
-                                            address = doc.data["address"] as ArrayList<String>,
-                                            addressId = doc.data["addressId"].toString(),
-                                            birthday = doc.data["birthday"].toString(),
-                                            gender = doc.data["gender"].toString(),
-                                            profileImageId = doc.data["profileImageId"].toString(),
-                                            email = doc.data["email"].toString(),
-                                            contactNumber = doc.data["contactNumber"] as ArrayList<String>
-                                        )
-
 
                                         // Navigate to the appropriate menu
                                         when (emailQuery.documents[0].data["userType"]?.toString()) {
