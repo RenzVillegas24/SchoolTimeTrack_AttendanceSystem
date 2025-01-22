@@ -383,7 +383,7 @@ class SignUp : Fragment() {
                 ) {
 
                     (ivProfileImage.drawable as? BitmapDrawable)?.bitmap?.let { profileBitmap ->
-                        FaceVerificationBottomSheet(profileBitmap)  { bottomSheet,_ ->
+                        FaceVerificationBottomSheet(profileBitmap, { bottomSheet,_ ->
                             Toast.makeText(context, "Face verification successful", Toast.LENGTH_SHORT).show()
                             bottomSheet.dismiss()
 
@@ -486,7 +486,7 @@ class SignUp : Fragment() {
                                     e.printStackTrace()
                                 }
                             }
-                        }.show(parentFragmentManager, "FaceVerificationBottomSheet")
+                        }).show(parentFragmentManager, "FaceVerificationBottomSheet")
                     }
                 } else if (password != confPassword) {
                     Toast.makeText(context, "Passwords do not match", Toast.LENGTH_SHORT).show()

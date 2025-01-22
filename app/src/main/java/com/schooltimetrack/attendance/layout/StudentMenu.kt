@@ -129,6 +129,11 @@ class StudentMenu : Fragment() {
         selectedListDatesText = view.findViewById(R.id.selectedListDatesText)
 
 
+        weeklyAttendanceView.apply {
+            setGrade(userDocument?.grade ?: "")
+            setSection(userDocument?.section ?: "")
+            setUserId(userDocument?.userId ?: "")
+        }
 
         colPrimary = MaterialColors.getColor(requireContext(), com.google.android.material.R.attr.colorPrimary  , Color.BLACK)
         colSub = MaterialColors.getColor(requireContext(), com.google.android.material.R.attr.colorSecondaryContainer, Color.BLACK)

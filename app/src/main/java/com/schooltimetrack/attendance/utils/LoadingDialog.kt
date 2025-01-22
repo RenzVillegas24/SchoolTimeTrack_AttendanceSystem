@@ -6,6 +6,7 @@ import android.view.View
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.textview.MaterialTextView
 import com.schooltimetrack.attendance.R
 
 class LoadingDialog(private val context: Context) {
@@ -15,14 +16,14 @@ class LoadingDialog(private val context: Context) {
     fun show(message: String = "Loading...") {
         if (dialog == null) {
             dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_loading, null)
-            dialogView?.findViewById<TextView>(R.id.tvMessage)?.text = message
+            dialogView?.findViewById<MaterialTextView>(R.id.tvMessage)?.text = message
             
             dialog = MaterialAlertDialogBuilder(context, R.style.TransparentDialog)
                 .setView(dialogView)
                 .setCancelable(false)
                 .create()
         } else {
-            dialogView?.findViewById<TextView>(R.id.tvMessage)?.text = message
+            dialogView?.findViewById<MaterialTextView>(R.id.tvMessage)?.text = message
         }
         dialog?.show()
     }

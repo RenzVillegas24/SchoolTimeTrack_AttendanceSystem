@@ -54,10 +54,15 @@
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/topAppBar"
             android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            app:title="TimeTrack Logging Mode"
+            android:layout_height="85dp"
+            app:titleMarginBottom="25dp"
+            app:title="Time Track Log In"
+            app:subtitle="Align the QR code within the frame"
+            app:subtitleTextAppearance="?attr/textAppearanceSubtitle1"
+            app:subtitleCentered="true"
             app:navigationIcon="@drawable/ic_chevron_left_24_filled"
             app:navigationIconTint="?attr/colorOnSurface"
+            android:layout_marginTop="15dp"
             app:titleCentered="true"/>
 
     </com.google.android.material.appbar.AppBarLayout>

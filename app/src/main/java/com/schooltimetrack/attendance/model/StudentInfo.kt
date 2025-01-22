@@ -13,5 +13,6 @@ data class StudentInfo(
     val grade: String,
     val gender: String,
     val contactNumber: Array<String>,
-    val embedding: FloatArray
+    val embedding: FloatArray,
+    val profileImageId: String
 )

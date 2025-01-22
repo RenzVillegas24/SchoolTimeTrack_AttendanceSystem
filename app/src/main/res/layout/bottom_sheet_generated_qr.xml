@@ -22,6 +22,19 @@
         android:text="Generated QR Code"
         style="?attr/textAppearanceHeadlineSmall"/>
 
+
+
+    <TextView
+        android:id="@+id/tvMessage"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top"
+        android:layout_marginTop="55dp"
+        android:gravity="center"
+        android:padding="16dp"
+        style="?attr/textAppearanceSubtitle1"
+        android:text="Scan the QR code for sigining in"/>
+
     <View
         android:id="@+id/indicator"
         android:layout_width="40dp"

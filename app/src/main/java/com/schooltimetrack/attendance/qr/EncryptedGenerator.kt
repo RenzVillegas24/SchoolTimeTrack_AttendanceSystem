@@ -73,6 +73,7 @@ class EncryptedGenerator {
             put("grade", info.grade)
             put("gender", info.gender)
             put("contactNumber", JSONArray(info.contactNumber))
+            put("profileImageId", info.profileImageId)
 //            put("embedding", JSONArray(info.embedding))
         }
 
@@ -94,6 +95,7 @@ class EncryptedGenerator {
             put("subject", info.subject)
             put("gender", info.gender)
             put("contactNumber", JSONArray(info.contactNumber))
+            put("profileImageId", info.profileImageId)
 //            put("embedding", JSONArray(info.embedding))
         }
 

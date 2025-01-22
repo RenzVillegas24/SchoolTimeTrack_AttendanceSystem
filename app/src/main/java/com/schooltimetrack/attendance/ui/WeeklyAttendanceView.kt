@@ -21,13 +21,29 @@ class WeeklyAttendanceView @JvmOverloads constructor(
     defStyleAttr: Int = 0
 ) : RecyclerView(context, attrs, defStyleAttr) {
 
-//    private var onCheckInListener: (() -> Unit)? = null
-//    private var onCheckOutListener: (() -> Unit)? = null
+    private var grade: String = ""
+    private var section: String = ""
+    private var userId: String = ""
     private var onDateChangeListener: ((String) -> Unit)? = null
     private var initialScrollDone = false
     private var currentCenterDate: String? = null
 
     init {
+        // Read custom attributes
+        context.theme.obtainStyledAttributes(
+            attrs,
+            R.styleable.WeeklyAttendanceView,
+            0, 0
+        ).apply {
+            try {
+                grade = getString(R.styleable.WeeklyAttendanceView_grade) ?: ""
+                section = getString(R.styleable.WeeklyAttendanceView_section) ?: ""
+                userId = getString(R.styleable.WeeklyAttendanceView_userId) ?: ""
+            } finally {
+                recycle()
+            }
+        }
+
         setupRecyclerView()
         clipToPadding = false
         setPadding(
@@ -37,6 +53,28 @@ class WeeklyAttendanceView @JvmOverloads constructor(
             resources.getDimensionPixelSize(R.dimen.weekly_attendance_padding)
         )
         attachSnapHelper()
+    }
+
+    // Add setter methods
+    fun setGrade(value: String) {
+        grade = value
+        reinitializeAdapter()
+    }
+
+    fun setSection(value: String) {
+        section = value
+        reinitializeAdapter()
+    }
+
+    fun setUserId(value: String) {
+        userId = value
+        reinitializeAdapter()
+    }
+
+    private fun reinitializeAdapter() {
+        if (grade.isNotEmpty() && section.isNotEmpty() && userId.isNotEmpty()) {
+            setupRecyclerView()
+        }
     }
 
     private fun setupRecyclerView() {
@@ -51,45 +89,48 @@ class WeeklyAttendanceView @JvmOverloads constructor(
             }
         }
 
-        this.adapter = WeeklyAttendanceAdapter(
-            onCheckInListener = {
-                MaterialAlertDialogBuilder(context)
-                    .setTitle("Check In")
-                    .setMessage("Are you sure you want to check in?")
-                    .setPositiveButton("Yes") { dialog, which ->
-                        GlobalScope.launch {
-                            (adapter as WeeklyAttendanceAdapter).updateAttendance(true)
+        // Only initialize adapter if we have all required values
+        if (grade.isNotEmpty() && section.isNotEmpty() && userId.isNotEmpty()) {
+            this.adapter = WeeklyAttendanceAdapter(
+                onCheckInListener = {
+                    MaterialAlertDialogBuilder(context)
+                        .setTitle("Check In")
+                        .setMessage("Are you sure you want to check in?")
+                        .setPositiveButton("Yes") { dialog, which ->
+                            GlobalScope.launch {
+                                (adapter as WeeklyAttendanceAdapter).updateAttendance(true)
+                            }
                         }
-                    }
-                    .setNegativeButton("No") { dialog, which ->
-                        // do nothing
-                    }
-                    .show()
-            },
-            onCheckOutListener = {
-                MaterialAlertDialogBuilder(context)
-                    .setTitle("Check Out")
-                    .setMessage("Are you sure you want to check out?")
-                    .setPositiveButton("Yes") { dialog, which ->
-                        GlobalScope.launch {
-                            (adapter as WeeklyAttendanceAdapter).updateAttendance(false)
+                        .setNegativeButton("No") { dialog, which ->
+                            // do nothing
                         }
+                        .show()
+                },
+                onCheckOutListener = {
+                    MaterialAlertDialogBuilder(context)
+                        .setTitle("Check Out")
+                        .setMessage("Are you sure you want to check out?")
+                        .setPositiveButton("Yes") { dialog, which ->
+                            GlobalScope.launch {
+                                (adapter as WeeklyAttendanceAdapter).updateAttendance(false)
+                            }
+                        }
+                        .setNegativeButton("No") { dialog, which ->
+                            // do nothing
+                        }
+                        .show()
+                },
+                databases = (context as MainActivity).databases,
+                grade = grade,
+                section = section,
+                userId = userId
+            ).apply {
+                registerAdapterDataObserver(object : AdapterDataObserver() {
+                    override fun onChanged() {
+                        scrollToCenter()
                     }
-                    .setNegativeButton("No") { dialog, which ->
-                        // do nothing
-                    }
-                    .show()
-            },
-            databases = (context as MainActivity).databases,
-            grade = (context as MainActivity).userDocument?.grade ?: "",
-            section = (context as MainActivity).userDocument?.section ?: "",
-            userId = (context as MainActivity).userDocument?.userId ?: ""
-        ).apply {
-            registerAdapterDataObserver(object : AdapterDataObserver() {
-                override fun onChanged() {
-                    scrollToCenter()
-                }
-            })
+                })
+            }
         }
 
         addOnScrollListener(object : OnScrollListener() {
@@ -192,15 +233,6 @@ class WeeklyAttendanceView @JvmOverloads constructor(
             onDateChangeListener?.invoke(date)
         }
     }
-
-//
-//    fun setOnCheckInListener(listener: () -> Unit) {
-//        onCheckInListener = listener
-//    }
-//
-//    fun setOnCheckOutListener(listener: () -> Unit) {
-//        onCheckOutListener = listener
-//    }
 
     fun setOnDateChangeListener(listener: (String) -> Unit) {
         onDateChangeListener = listener

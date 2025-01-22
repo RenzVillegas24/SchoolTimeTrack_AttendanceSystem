@@ -14,5 +14,6 @@ data class TeacherInfo(
     val subject: String,
     val gender: String,
     val contactNumber: Array<String>,
-    val embedding: FloatArray
+    val embedding: FloatArray,
+    val profileImageId: String
 )

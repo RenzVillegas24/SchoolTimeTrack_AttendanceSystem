@@ -4,20 +4,71 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?attr/colorSurface"
+    android:background="@drawable/gradient_background"
     tools:context=".layout.Welcome">
 
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/ablToolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:theme="@style/ThemeOverlay.MaterialComponents.Dark.ActionBar">
+        android:background="@android:color/transparent"
+        android:elevation="0dp"
+        android:clipToPadding="false"
+        android:fitsSystemWindows="true">
 
         <com.google.android.material.appbar.CollapsingToolbarLayout
+            android:id="@+id/ctlToolbar"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:layout_scrollFlags="scroll|exitUntilCollapsed"
-            app:contentScrim="?attr/colorPrimary">
+            android:layout_height="300dp"
+            app:layout_scrollFlags="scroll|exitUntilCollapsed|snap"
+            app:contentScrim="?attr/colorSurface">
+
+            <ImageView
+                android:id="@+id/ivHeader"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_gravity="center"
+                android:src="@drawable/header1"
+                android:scaleType="centerCrop"
+                app:layout_collapseMode="parallax"/>
+
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                android:orientation="vertical"
+                android:gravity="center_horizontal"
+                android:spacing="16dp"
+                android:paddingTop="50dp"
+                android:background="@drawable/gradient_background_below"
+                >
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="School Time Track"
+                    android:textSize="32sp"
+                    android:textStyle="bold"
+                    android:textColor="?attr/colorOnSurface"
+                    android:layout_marginTop="16dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Attendance System"
+                    android:textSize="20sp"
+                    android:textColor="?attr/colorOnSurfaceVariant"/>
+
+            </LinearLayout>
+
+
+            <com.google.android.material.appbar.MaterialToolbar
+                android:id="@+id/toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="100dp"
+                app:layout_collapseMode="pin"
+                android:elevation="0dp" />
 
 
         </com.google.android.material.appbar.CollapsingToolbarLayout>
@@ -27,7 +78,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         app:layout_behavior="@string/appbar_scrolling_view_behavior"
-        android:padding="16dp"
+        android:padding="24dp"
         android:clipChildren="false"
         android:clipToPadding="false">
 
@@ -35,36 +86,40 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:gravity="center_horizontal">
+            android:gravity="center_horizontal"
+            android:spacing="16dp">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="School Time Track"
-                android:textSize="24sp"
-                android:textStyle="bold"
-                android:layout_marginTop="16dp" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Attendance System"
-                android:textSize="18sp"
-                android:layout_marginTop="8dp" />
 
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                app:cardCornerRadius="16dp"
-                android:layout_marginTop="16dp"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="24dp"
                 android:layout_marginHorizontal="8dp"
-                app:cardElevation="20dp">
-                <TextView
+                app:cardElevation="8dp"
+                app:strokeWidth="1dp"
+                app:strokeColor="?attr/colorOutline">
+
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:padding="16dp"
-                    android:text="Welcome to the School Time Track Attendance System. This app uses QR codes for students to track their time in and time out. The QR code will be scanned using the camera."
-                    android:textSize="16sp" />
+                    android:orientation="vertical"
+                    android:padding="24dp">
+
+                    <ImageView
+                        android:layout_width="64dp"
+                        android:layout_height="64dp"
+                        android:src="@drawable/ic_calendar_clock_24"
+                        android:scaleType="fitCenter"
+                        android:layout_gravity="center"
+                        android:layout_marginBottom="16dp"/>
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Welcome to the School Time Track Attendance System. This app uses QR codes for students to track their time in and time out. The QR code will be scanned using the camera."
+                        android:textSize="16sp"
+                        android:textAlignment="center"/>
+                </LinearLayout>
 
             </com.google.android.material.card.MaterialCardView>
 
@@ -72,43 +127,61 @@
                 android:id="@+id/btnLogin"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginHorizontal="3dp"
-                style="@style/Widget.Material3.Button.IconButton.Filled"
-                app:cornerRadius="10dp"
+                android:layout_marginHorizontal="8dp"
+                android:layout_marginTop="24dp"
+                style="@style/Widget.Material3.Button.ElevatedButton"
+                app:cornerRadius="16dp"
+                android:padding="16dp"
+                android:textSize="16sp"
                 android:text="Log In using Email"
-                android:layout_marginTop="16dp" />
+                app:icon="@drawable/ic_mail_24_regular"
+                app:iconGravity="start"/>
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnLoginQR"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginHorizontal="3dp"
-                style="@style/Widget.Material3.Button.IconButton.Filled"
-                app:cornerRadius="10dp"
-                android:text="Log In using QR"/>
+                android:layout_marginHorizontal="8dp"
+                android:layout_marginTop="12dp"
+                style="@style/Widget.Material3.Button.ElevatedButton"
+                app:cornerRadius="16dp"
+                android:padding="16dp"
+                android:textSize="16sp"
+                android:text="Log In using QR"
+                app:icon="@drawable/ic_qr_code_24_regular"
+                app:iconGravity="start"/>
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnAutoLogin"
-                style="@style/Widget.Material3.Button.IconButton.Filled"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginHorizontal="3dp"
-                android:text="Auto Log In"
-                app:cornerRadius="10dp" />
+                android:layout_marginHorizontal="8dp"
+                android:layout_marginTop="12dp"
+                style="@style/Widget.Material3.Button.ElevatedButton"
+                app:cornerRadius="16dp"
+                android:padding="16dp"
+                android:textSize="16sp"
+                android:text="Time Track Log In"
+                app:icon="@drawable/ic_calendar_clock_24_regular"
+                app:iconGravity="start"/>
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnSignUp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginHorizontal="3dp"
-                style="@style/Widget.Material3.Button.IconButton.Filled.Tonal"
-                app:cornerRadius="10dp"
-                android:text="Sign Up"/>
+                android:layout_marginHorizontal="8dp"
+                android:layout_marginTop="12dp"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                app:cornerRadius="16dp"
+                android:padding="16dp"
+                android:textSize="16sp"
+                android:text="Sign Up"
+                app:icon="@drawable/ic_person_add_24_regular"
+                app:iconGravity="start"/>
 
             <Space
-                android:id="@+id/sBottom"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"/>
+                android:layout_height="32dp"/>
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>

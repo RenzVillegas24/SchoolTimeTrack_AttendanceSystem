@@ -7,14 +7,13 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    tools:context=".layout.StudentMenu">
+    tools:context=".layout.TimeTrackStudentMenu">
 
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:fitsSystemWindows="true"
-        android:background="?attr/colorSurface"
-        tools:context=".layout.StudentMenu">
+        android:background="?attr/colorSurface">
 
         <!-- Existing content -->
         <com.google.android.material.appbar.AppBarLayout
@@ -26,136 +25,13 @@
                 android:id="@+id/topAppBar"
                 android:layout_width="match_parent" 
                 android:layout_height="?attr/actionBarSize"
-                app:title="Student Menu"
-                app:menu="@menu/top_app_bar"
+                app:title="Time Tracking Menu"
                 app:titleCentered="true"
-                app:navigationIcon="@drawable/ic_menu_rounded"
+                app:menu="@menu/top_app_bar"
+                app:navigationIcon="@drawable/ic_chevron_left_24_filled"
                 app:navigationIconTint="?attr/colorOnSurface"/>
 
         </com.google.android.material.appbar.AppBarLayout>
-
-
-        <androidx.core.widget.NestedScrollView
-            android:id="@+id/attendanceContainer"
-            android:layout_below="@id/ablToolbar"
-            android:visibility="gone"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            app:layout_behavior="@string/appbar_scrolling_view_behavior">
-
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="?attr/colorSurface"
-                android:orientation="vertical">
-
-                <com.shuhart.materialcalendarview.MaterialCalendarView
-                    android:id="@+id/calendarSelection"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:paddingLeft="20dp"
-                    android:paddingRight="20dp"
-                    app:mcv_showOtherDates="all"
-                    app:mcv_bottomTopDayPadding="3dp"
-                    app:mcv_calendarMode="month"
-                    app:mcv_headerTextAppearance="@style/calendarHeaderTextAppearance"
-                    app:mcv_dateTextAppearance="@style/calendarDateTextAppearance"
-                    app:mcv_selectionRangeColor="?attr/colorSecondaryContainer"
-                    tools:ignore="PrivateResource" />
-
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:padding="16dp"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textSize="16sp"
-                        android:layout_marginHorizontal="4dp"
-                        android:layout_marginBottom="8dp"
-                        android:text="Mode of Selection"/>
-
-                    <com.schooltimetrack.attendance.ui.SegmentedControl
-                        android:id="@+id/segSelectionType"
-                        android:layout_width="match_parent"
-                        android:layout_height="65dp"
-                        app:cornerRadius="16dp"
-                        android:padding="4dp">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:gravity="center"
-                            android:textSize="16sp"
-                            android:text="Single" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:gravity="center"
-                            android:textSize="16sp"
-                            android:text="Range" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:gravity="center"
-                            android:textSize="16sp"
-                            android:text="Multiple" />
-
-                    </com.schooltimetrack.attendance.ui.SegmentedControl>
-
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
-                        android:textSize="16sp"
-                        android:layout_marginHorizontal="4dp"
-                        android:layout_marginBottom="8dp"
-                        android:text="Selected Dates"/>
-
-
-                    <com.google.android.material.card.MaterialCardView
-                        android:layout_width="match_parent"
-                        android:layout_marginHorizontal="4dp"
-                        android:layout_height="wrap_content"
-                        app:cardCornerRadius="16dp"
-                        app:cardBackgroundColor="?attr/colorSurfaceVariant"
-                        style="@style/Widget.Material3.CardView.Filled">
-
-                        <TextView
-                            android:id="@+id/selectedListDatesText"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:padding="16dp"
-                            android:textSize="14sp"/>
-                    </com.google.android.material.card.MaterialCardView>
-
-                    <TextView
-                        android:id="@+id/currentAttendanceText"
-                        android:layout_width="wrap_content"
-                        android:layout_marginTop="16dp"
-                        android:layout_height="wrap_content"
-                        android:textSize="16sp"
-                        android:layout_marginHorizontal="4dp"
-                        android:layout_marginBottom="8dp"
-                        android:text="Current Attendance"/>
-
-                    <LinearLayout
-                        android:id="@+id/currentListAttendance"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginHorizontal="4dp"
-                        android:orientation="vertical"/>
-
-                </LinearLayout>
-            </LinearLayout>
-        </androidx.core.widget.NestedScrollView>
 
 
         <!-- Rest of your existing layout -->
@@ -191,13 +67,5 @@
 
     </RelativeLayout>
 
-    <com.google.android.material.navigation.NavigationView
-        android:id="@+id/nav_view"
-        android:layout_width="wrap_content"
-        android:layout_height="match_parent"
-        android:layout_gravity="start"
-        android:fitsSystemWindows="true"
-        app:headerLayout="@layout/nav_header"
-        app:menu="@menu/main_drawer_menu"/>
 
 </androidx.drawerlayout.widget.DrawerLayout>

@@ -14,6 +14,7 @@ import com.schooltimetrack.attendance.R
 import kotlinx.coroutines.launch
 import androidx.lifecycle.lifecycleScope
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.Space
 import android.widget.TextView
 import androidx.annotation.RequiresApi
@@ -41,6 +42,7 @@ import java.util.Locale
 class UserInfo : Fragment() {
     private lateinit var navController: NavController
     private var userDocument: UserDocument? = null
+    private var isTimeTrack: Boolean = false
     private lateinit var client: Client
     private lateinit var storage: Storage
     private lateinit var account: Account
@@ -55,6 +57,7 @@ class UserInfo : Fragment() {
 
         arguments?.let {
             userDocument = it.getParcelable("UserDocument")
+            isTimeTrack = it.getBoolean("isTimeTrack")
         }
         client = (activity as MainActivity).client
         storage = (activity as MainActivity).storage
@@ -74,6 +77,7 @@ class UserInfo : Fragment() {
 
         val ablToolbar = view.findViewById<AppBarLayout>(R.id.ablToolbar)
         val sBottom = view.findViewById<Space>(R.id.sBottom)
+        val llAccountOptions = view.findViewById<LinearLayout>(R.id.llAccountOptions)
 
         ViewCompat.setOnApplyWindowInsetsListener(view) { v, insets ->
             val statusBar = insets.getInsets(WindowInsetsCompat.Type.statusBars())
@@ -94,6 +98,10 @@ class UserInfo : Fragment() {
         toolbar.setNavigationIconTint(MaterialColors.getColor(requireContext(), com.google.android.material.R.attr.colorOnSurface, "colorOnSurface"))
         toolbar.setNavigationOnClickListener {
             navController.popBackStack()
+        }
+
+        if (isTimeTrack) {
+            llAccountOptions.visibility = View.GONE
         }
 
         userDocument?.let { user ->
@@ -273,13 +281,4 @@ class UserInfo : Fragment() {
         return view
     }
 
-    companion object {
-        @JvmStatic
-        fun newInstance(userDocument: UserDocument) =
-            UserInfo().apply {
-                arguments = Bundle().apply {
-                    putParcelable("UserDocument", userDocument)
-                }
-            }
-    }
 }

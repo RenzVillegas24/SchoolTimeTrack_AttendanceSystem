@@ -26,5 +26,8 @@
     </declare-styleable>
     <declare-styleable name="WeeklyAttendanceView">
         <attr name="android:padding" />
+        <attr name="grade" format="string"/>
+        <attr name="section" format="string"/>
+        <attr name="userId" format="string"/>
     </declare-styleable>
 </resources>

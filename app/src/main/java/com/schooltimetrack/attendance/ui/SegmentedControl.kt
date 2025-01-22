@@ -82,6 +82,15 @@ class SegmentedControl @JvmOverloads constructor(
                 MaterialColors.getColor(this, com.google.android.material.R.attr.colorOnSurface)
             }
             (child as? TextView)?.setTextColor(textColor)
+
+             
+            // Add click listener
+            child.setOnClickListener {
+                val index = indexOfChild(it)
+                if (index != selectedIndex) {
+                    animateToIndex(index)
+                }
+            }
         }
     }
 
@@ -131,21 +140,21 @@ class SegmentedControl @JvmOverloads constructor(
         super.dispatchDraw(canvas)
     }
 
-    override fun onTouchEvent(event: MotionEvent): Boolean {
-        when (event.action) {
-            MotionEvent.ACTION_DOWN,
-            MotionEvent.ACTION_MOVE -> {
-                val x = event.x - paddingLeft
-                val index = (x / segmentWidth).toInt()
-                    .coerceIn(0, childCount - 1)
-                if (index != selectedIndex) {
-                    animateToIndex(index)
-                }
-                return true
-            }
-        }
-        return super.onTouchEvent(event)
-    }
+    // override fun onTouchEvent(event: MotionEvent): Boolean {
+    //     when (event.action) {
+    //         MotionEvent.ACTION_DOWN,
+    //         MotionEvent.ACTION_MOVE -> {
+    //             val x = event.x - paddingLeft
+    //             val index = (x / segmentWidth).toInt()
+    //                 .coerceIn(0, childCount - 1)
+    //             if (index != selectedIndex) {
+    //                 animateToIndex(index)
+    //             }
+    //             return true
+    //         }
+    //     }
+    //     return super.onTouchEvent(event)
+    // }
 
     private fun animateToIndex(index: Int) {
         animator?.cancel()

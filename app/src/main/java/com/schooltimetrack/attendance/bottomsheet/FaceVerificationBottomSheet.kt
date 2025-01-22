@@ -4,6 +4,7 @@ import android.animation.Keyframe
 import android.animation.ObjectAnimator
 import android.animation.PropertyValuesHolder
 import android.app.Dialog
+import android.content.DialogInterface
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.os.Bundle
@@ -24,6 +25,8 @@ import com.schooltimetrack.attendance.ui.FaceVerificationView
 class FaceVerificationBottomSheet(
     private val profileImage: Any,
     private val onVerificationSuccess: (FaceVerificationBottomSheet, List<Triple<String, List<String>, Float>>) -> Unit,
+    // optional parameters
+    private val onCanceled: (FaceVerificationBottomSheet) -> Unit = {},
 ) : BottomSheetDialogFragment() {
 
     private lateinit var faceVerificationView: FaceVerificationView
@@ -185,6 +188,13 @@ class FaceVerificationBottomSheet(
         }
 
         return dialog
+    }
+
+    override fun onDismiss(dialog: DialogInterface) {
+        super.onDismiss(dialog)
+        faceVerificationView.cameraExecutor?.shutdown()
+        faceVerificationView.pauseDetection()
+        onCanceled(this)
     }
 
     override fun onDestroy() {

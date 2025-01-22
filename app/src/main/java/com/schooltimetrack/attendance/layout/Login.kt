@@ -136,7 +136,8 @@ class Login : Fragment() {
                                 return@launch
                             }
 
-                            FaceVerificationBottomSheet(Triple(embedding, docId, name)) { bottomSheet, results ->
+                            FaceVerificationBottomSheet(Triple(embedding, docId, name),
+                                { bottomSheet, results ->
                                 Toast.makeText(context, "Face verified", Toast.LENGTH_SHORT).show()
                                 viewLifecycleOwner.lifecycleScope.launch {
                                     try {
@@ -186,7 +187,7 @@ class Login : Fragment() {
                                 }
 
                                 bottomSheet.dismiss()
-                            }.show(childFragmentManager, "FaceVerificationBottomSheet")
+                            }).show(childFragmentManager, "FaceVerificationBottomSheet")
 
                         } ?: run {
                             withContext(Dispatchers.Main) {
@@ -216,7 +217,7 @@ class Login : Fragment() {
         }
 
         btnLoginQR.setOnClickListener {
-            findNavController().navigate(R.id.action_login_to_loginQR)
+//            findNavController().navigate(R.id.action_login_to_loginQR)
         }
 
         btnSignUp.setOnClickListener {
