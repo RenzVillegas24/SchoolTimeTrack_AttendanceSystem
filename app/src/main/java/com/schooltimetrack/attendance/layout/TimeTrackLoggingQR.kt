@@ -6,9 +6,12 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.PathInterpolator
 import android.widget.Button
+import android.widget.FrameLayout
 import android.widget.Space
 import android.widget.Toast
+import androidx.activity.addCallback
 import androidx.camera.view.PreviewView
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -60,31 +63,49 @@ class LoginQR : Fragment() {
   ): View {
     val view = inflater.inflate(R.layout.fragment_login_qr, container, false)
 
-    val btnLogin = view.findViewById<Button>(R.id.btnLogin)
-    val btnSignUp = view.findViewById<Button>(R.id.btnSignUp)
+
+    val btnExit = view.findViewById<Button>(R.id.btnExit)
+    btnExit.setOnClickListener {
+        exit()
+    }
+
+    val btnSwitchCamera = view.findViewById<Button>(R.id.btnSwitchCamera)
+    btnSwitchCamera.setOnClickListener {
+        btnSwitchCamera.animate()
+            .rotationBy(180f)
+            .setDuration(700)
+            .setInterpolator(PathInterpolator(0.3f, 1.5f, 0.25f, 1f))
+            .start()
+        encryptedScanner.switchCamera()
+    }
+
+    val bottomContainer = view.findViewById<FrameLayout>(R.id.bottomContainer)
+
     val qrGenerator = EncryptedGenerator()
 
     val ablToolbar = view.findViewById<AppBarLayout>(R.id.ablToolbar)
-    val sBottom = view.findViewById<Space>(R.id.sBottom)
 
     ViewCompat.setOnApplyWindowInsetsListener(view) { v, insets ->
       val statusBar = insets.getInsets(WindowInsetsCompat.Type.statusBars())
       val navBar = insets.getInsets(WindowInsetsCompat.Type.navigationBars())
       ablToolbar.setPadding(0, statusBar.top, 0, 0)
-      sBottom.layoutParams.height = navBar.bottom
+        // set bottom margin to the bottom container
+      val params = bottomContainer.layoutParams as ViewGroup.MarginLayoutParams
+      params.bottomMargin = navBar.bottom
+      bottomContainer.layoutParams = params
       insets
     }
 
-    val toolbar = view.findViewById<MaterialToolbar>(R.id.toolbar)
-    toolbar.setNavigationIcon(R.drawable.ic_chevron_left_24_filled)
-    toolbar.setNavigationIconTint(
-            MaterialColors.getColor(
-                    requireContext(),
-                    com.google.android.material.R.attr.colorOnSurface,
-                    "colorOnSurface"
-            )
-    )
-    toolbar.setNavigationOnClickListener { findNavController().popBackStack() }
+    val toolbar = view.findViewById<MaterialToolbar>(R.id.topAppBar)
+
+    toolbar.setNavigationOnClickListener {
+        exit()
+    }
+
+      // on back press
+    requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner) {
+        exit()
+    }
 
     exitTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ true)
     enterTransition = MaterialSharedAxis(MaterialSharedAxis.X, /* forward= */ true)
@@ -241,10 +262,24 @@ class LoginQR : Fragment() {
         }
       )
 
-    btnSignUp.setOnClickListener { findNavController().navigate(R.id.action_loginQR_to_signUp) }
+
 
     return view
   }
+
+    private fun exit() {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Exit Confirmation")
+            .setMessage("Are you sure you want to exit the TimeTrack Mode?")
+            .setPositiveButton("Yes") { dialog, _ ->
+                dialog.dismiss()
+                findNavController().popBackStack()
+            }
+            .setNegativeButton("No") { dialog, _ ->
+                dialog.dismiss()
+            }
+            .show()
+    }
 
   override fun onDestroy() {
     super.onDestroy()
