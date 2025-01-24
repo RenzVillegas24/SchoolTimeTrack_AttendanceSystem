@@ -21,7 +21,7 @@
             android:layout_width="match_parent"
             android:layout_height="300dp"
             app:layout_scrollFlags="scroll|exitUntilCollapsed|snap"
-            app:contentScrim="?attr/colorSurface">
+            app:contentScrim="@color/transparent">
 
             <ImageView
                 android:id="@+id/ivHeader"
@@ -58,6 +58,7 @@
                     android:layout_height="wrap_content"
                     android:text="Attendance System"
                     android:textSize="20sp"
+                    android:layout_marginBottom="12dp"
                     android:textColor="?attr/colorOnSurfaceVariant"/>
 
             </LinearLayout>

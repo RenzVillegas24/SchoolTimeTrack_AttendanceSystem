@@ -93,7 +93,7 @@ class Welcome : Fragment() {
       val statusBar = insets.getInsets(WindowInsetsCompat.Type.statusBars())
       val navBar = insets.getInsets(WindowInsetsCompat.Type.navigationBars())
 
-      toolbar.layoutParams.height = statusBar.top + 80.toDp()
+      toolbar.layoutParams.height = statusBar.top + 90.toDp()
 
       // set margin for the header image
       insets
